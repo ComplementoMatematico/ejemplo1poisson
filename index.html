@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEF para Poisson · EPRIMA 2026</title>
+<meta name="description" content="Material complementario del cursillo de Análisis Numérico de EDP (EPRIMA 2026, UBB): teoría del método de elementos finitos para el problema de Poisson y laboratorio FreeFEM.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/computer-modern@0.1.2/cmu-serif.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  /* ------------------------------------------------------------------
+     Paleta y tipografía (idénticas a la guía en LaTeX)
+     ------------------------------------------------------------------ */
+  :root {
+    --navy: #1B3A57;
+    --acero: #3D7AA8;
+    --pizarra: #50677D;
+    --gristexto: #5E6A75;
+    --grislinea: #C9D1D9;
+    --fondo: #F3F5F8;
+    --comentario: #7A8590;
+    --cadena: #8A5A2B;
+    --texto: #1d232a;
+    --papel: #ffffff;
+    --serif: "CMU Serif", "Latin Modern Roman", Georgia, serif;
+    --sans: "Fira Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "Fira Mono", Consolas, "Courier New", monospace;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body {
+    margin: 0;
+    background: var(--papel);
+    color: var(--texto);
+    font-family: var(--serif);
+    font-size: 17.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--acero); }
+  img { max-width: 100%; }
+
+  /* Banda superior fija (como el encabezado del PDF) */
+  .banda {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--navy);
+    color: #fff;
+  }
+  .banda-in {
+    max-width: 1180px; margin: 0 auto; padding: 0 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 46px; font-family: var(--sans); font-weight: 600; font-size: 13px;
+    letter-spacing: .04em;
+  }
+  .banda-in .marca { color: #fff; text-decoration: none; }
+  .banda-in nav { display: flex; gap: 22px; }
+  .banda-in nav a { color: #cfe0ee; text-decoration: none; }
+  .banda-in nav a:hover { color: #fff; }
+  .banda::after {
+    content: ""; display: block; height: 4px; width: 150px;
+    background: var(--acero); margin-left: max(16px, calc((100vw - 1180px) / 2 + 16px));
+  }
+
+  /* Portada */
+  .hero-banner { display: block; width: 100%; height: auto; background: var(--navy); }
+  .hero { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+  .cinta {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 20px;
+    font-family: var(--sans); font-weight: 600; font-size: 13.5px; color: var(--acero);
+    letter-spacing: .04em; padding: 22px 0 8px; border-bottom: 1px solid var(--navy);
+  }
+  .titulo { text-align: center; padding: 38px 0 18px; }
+  .titulo h1 {
+    font-family: var(--serif); font-weight: 700; color: var(--navy);
+    font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin: 0 0 12px;
+  }
+  .titulo .sub { font-weight: 700; font-size: 20px; margin: 0 0 6px; }
+  .titulo .curso { font-style: italic; margin: 0 0 22px; }
+  .regla { width: 92px; height: 3px; background: var(--acero); margin: 0 auto 18px; border: 0; }
+  .titulo .autor { font-family: var(--sans); font-weight: 600; color: var(--acero); margin: 0; }
+  .titulo .afil { font-size: 15px; margin: 2px 0 0; }
+  .accesos {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;
+    margin: 26px 0 8px;
+  }
+  .acceso {
+    display: block; text-decoration: none; color: var(--texto);
+    border: 1px solid var(--pizarra); border-radius: 2px; overflow: hidden; background: #fff;
+    transition: box-shadow .15s, transform .15s;
+  }
+  .acceso:hover { box-shadow: 0 6px 18px rgba(27,58,87,.14); transform: translateY(-1px); }
+  .acceso .cab { background: var(--pizarra); color: #fff; font-weight: 700; padding: 6px 12px; }
+  .acceso p { margin: 0; padding: 10px 12px 12px; font-size: 15.5px; }
+
+  /* Distribución con índice lateral */
+  .marco {
+    max-width: 1180px; margin: 0 auto; padding: 8px 16px 40px;
+    display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 40px;
+  }
+  .indice { position: sticky; top: 70px; align-self: start; max-height: calc(100vh - 90px); overflow: auto;
+            font-family: var(--sans); font-size: 14px; padding-top: 30px; }
+  .indice h4 { font-size: 12px; letter-spacing: .08em; color: var(--navy); margin: 0 0 8px; }
+  .indice ol { list-style: none; padding: 0; margin: 0 0 18px; }
+  .indice li a { display: block; padding: 4px 0 4px 10px; color: var(--gristexto); text-decoration: none;
+                 border-left: 2px solid var(--grislinea); }
+  .indice li a:hover, .indice li a.activo { color: var(--navy); border-left-color: var(--acero); }
+  main { min-width: 0; }
+
+  /* Secciones con el sello del resumen */
+  .seccion { padding-top: 30px; }
+  .seccion > h2 {
+    font-family: var(--sans); font-weight: 700; color: var(--navy); text-transform: uppercase;
+    font-size: 21px; letter-spacing: .03em; margin: 26px 0 6px;
+  }
+  .seccion > h2::after { content: ""; display: block; width: 62px; height: 3px; background: var(--acero); margin-top: 8px; }
+  h3 { font-family: var(--sans); font-weight: 600; color: var(--navy); font-size: 18px; margin: 30px 0 8px; }
+  .parte {
+    font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: .1em; color: var(--acero);
+    margin: 48px 0 0; padding-top: 14px; border-top: 1px solid var(--navy);
+  }
+
+  /* Cajas: un único estilo para todas (igual que tcolorbox) */
+  .caja { border: 1px solid var(--pizarra); border-radius: 2px; margin: 20px 0; background: #fff; }
+  .caja > .cab {
+    background: var(--pizarra); color: #fff; font-weight: 700; padding: 5px 14px;
+    font-family: var(--serif); font-size: 17px;
+  }
+  .caja > .cab .nota { font-weight: 400; font-style: italic; }
+  .caja > .cuerpo { padding: 12px 16px; }
+  .caja > .cuerpo > :first-child { margin-top: 0; }
+  .caja > .cuerpo > :last-child { margin-bottom: 0; }
+  .caja.gris > .cuerpo { background: var(--fondo); }
+
+  /* Demostraciones desplegables dentro de la misma caja */
+  details.dem { border-top: 1px solid var(--grislinea); margin: 12px -16px -12px; }
+  details.dem > summary {
+    cursor: pointer; list-style: none; padding: 8px 16px;
+    font-family: var(--sans); font-weight: 600; font-size: 14.5px; color: var(--acero);
+    user-select: none;
+  }
+  details.dem > summary::-webkit-details-marker { display: none; }
+  details.dem > summary::before { content: "▸"; display: inline-block; width: 16px; transition: transform .15s; }
+  details.dem[open] > summary::before { transform: rotate(90deg); }
+  details.dem > .cont { padding: 0 16px 12px 32px; border-left: 3px solid var(--acero); margin: 0 16px 12px 16px; padding-left: 14px; }
+  .qed { float: right; color: var(--pizarra); }
+  .controles-dem { font-family: var(--sans); font-size: 14px; margin: 8px 0 0; }
+  .controles-dem button { margin-right: 8px; }
+
+  /* Tablas sobrias */
+  .tabla-wrap { overflow-x: auto; margin: 14px 0; }
+  table.t { border-collapse: collapse; font-size: 15.5px; min-width: 100%; }
+  table.t th, table.t td { border: 1px solid #39424c; padding: 6px 10px; text-align: center; }
+  table.t th { font-weight: 700; background: #fff; }
+  table.t td.izq, table.t th.izq { text-align: left; }
+  table.t.num td { font-variant-numeric: tabular-nums; }
+
+  /* Código */
+  .barra { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
+  button, .btn {
+    font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--pizarra); background: #fff; color: var(--navy);
+    padding: 7px 14px; border-radius: 2px; text-decoration: none; display: inline-flex; gap: 6px; align-items: center;
+    min-height: 36px;
+  }
+  button:hover, .btn:hover { background: var(--fondo); }
+  button.primario { background: var(--navy); color: #fff; border-color: var(--navy); }
+  button.primario:hover { background: #24496c; }
+  button:disabled { opacity: .55; cursor: progress; }
+  .estado-copia { font-family: var(--sans); font-size: 13.5px; color: var(--acero); min-width: 90px; }
+
+  pre.codigo {
+    margin: 0; background: var(--fondo); font-family: var(--mono); font-size: 14px; line-height: 1.55;
+    overflow-x: auto; padding: 10px 0; counter-reset: ln;
+  }
+  pre.codigo .l { display: block; padding: 0 16px 0 0; white-space: pre; }
+  pre.codigo .l::before {
+    counter-increment: ln; content: counter(ln); display: inline-block; width: 3.2em; padding-right: 1.1em;
+    text-align: right; color: #9aa4ae; font-size: 11px; user-select: none;
+  }
+  .tk-k1 { color: var(--navy); font-weight: 700; }
+  .tk-k2 { color: var(--acero); font-weight: 700; }
+  .tk-k3 { color: var(--pizarra); }
+  .tk-c { color: var(--comentario); font-style: italic; }
+  .tk-s { color: var(--cadena); }
+  .tk-n { color: #2f5d50; }
+  code.in { font-family: var(--mono); font-size: .88em; background: var(--fondo); padding: 1px 5px; border-radius: 2px; }
+
+  /* Laboratorio */
+  .lab-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; }
+  .res-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center; }
+  .res-grid .vacio { grid-column: 1 / -1; }
+  textarea.editor {
+    width: 100%; min-height: 520px; resize: vertical; border: 0; outline: 0; margin: 0; display: block;
+    background: var(--fondo); font-family: var(--mono); font-size: 13.5px; line-height: 1.5; padding: 12px 14px;
+    color: var(--texto); tab-size: 4; white-space: pre; overflow: auto;
+  }
+  .estado { font-family: var(--sans); font-size: 14px; color: var(--gristexto); margin: 8px 0 0; min-height: 22px; }
+  .estado.ok { color: #2f6b3a; } .estado.err { color: #9b2c2c; }
+  .lienzo-wrap { background: #fff; border-bottom: 1px solid var(--grislinea); }
+  canvas#ffjs-canvas { width: 100%; display: block; aspect-ratio: 1.414 / 1; background: #fff; }
+  .vacio { font-family: var(--sans); color: var(--gristexto); font-size: 14px; text-align: center; padding: 30px 10px; }
+  pre.consola {
+    margin: 0; max-height: 280px; overflow: auto; background: #10202f; color: #d6e2ee;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.45; padding: 10px 14px; white-space: pre-wrap;
+  }
+  svg.grafico { width: 100%; height: auto; display: block; }
+  .leyenda { font-family: var(--sans); font-size: 13px; color: var(--gristexto); display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+  .leyenda i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; }
+
+  .pasos { counter-reset: paso; list-style: none; padding: 0; }
+  .pasos > li { counter-increment: paso; position: relative; padding-left: 34px; margin: 8px 0; }
+  .pasos > li::before {
+    content: counter(paso); position: absolute; left: 0; top: 1px; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--navy); color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 600;
+    display: grid; place-items: center;
+  }
+  ul.vinetas { padding-left: 1.2em; }
+  ul.vinetas li::marker { color: var(--acero); content: "▸  "; }
+
+  /* Pie con instituciones */
+  footer { border-top: 1px solid var(--grislinea); margin-top: 30px; }
+  .pie-in { max-width: 1180px; margin: 0 auto; padding: 18px 16px 26px; }
+  .org { font-family: var(--sans); font-size: 12px; letter-spacing: .1em; color: var(--gristexto); text-align: center; margin: 0 0 12px; }
+  .logos { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px 0; }
+  .logos img { height: 58px; width: auto; padding: 0 26px; }
+  .logos img + img { border-left: 1px solid var(--grislinea); }
+  .logos img.ancho { height: 38px; }
+  .pie-texto { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 20px;
+               font-size: 13.5px; color: var(--gristexto); border-top: 1px solid var(--grislinea);
+               margin-top: 18px; padding-top: 10px; }
+  .banda-final { height: 12px; background: var(--navy); }
+
+  .katex { font-size: 1.04em; }
+  .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+
+  @media (max-width: 960px) {
+    .marco { grid-template-columns: 1fr; gap: 0; }
+    .indice { display: none; }
+    .lab-grid, .res-grid { grid-template-columns: 1fr; }
+    .banda-in nav { gap: 14px; }
+  }
+  @media (max-width: 560px) {
+    body { font-size: 16.5px; }
+    .banda-in nav { display: none; }
+    .caja > .cuerpo { padding: 10px 12px; }
+    details.dem { margin: 12px -12px -10px; }
+    .logos img { height: 44px; padding: 0 14px; }
+    .logos img.ancho { height: 30px; }
+    textarea.editor { min-height: 380px; }
+  }
+  @media print {
+    .banda, .indice, .barra, #laboratorio .lab-grid { display: none !important; }
+    details.dem > .cont { display: block !important; }
+    .marco { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<header class="banda">
+  <div class="banda-in">
+    <a class="marca" href="#inicio">EPRIMA 2026</a>
+    <nav aria-label="Secciones">
+      <a href="#teoria">TEORÍA</a>
+      <a href="#codigo">CÓDIGO</a>
+      <a href="#laboratorio">LABORATORIO</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ================================================================
+     PORTADA
+     ================================================================ -->
+<section id="inicio">
+  <img class="hero-banner" src="logos/banner_eprima.png"
+       alt="E'(UBB) = 2026 · Escuela de Primavera en Matemática Aplicada · Novena versión">
+  <div class="hero">
+    <div class="cinta">
+      <span>EPRIMA 2026 · NOVENA VERSIÓN</span>
+      <span>CURSILLO · ANÁLISIS NUMÉRICO DE EDP</span>
+    </div>
+    <div class="titulo">
+      <h1>Introducción al Método<br>de Elementos Finitos</h1>
+      <p class="sub">Análisis y aproximación del problema de Poisson</p>
+      <p class="curso">Cursillo de Análisis Numérico de Ecuaciones en Derivadas Parciales</p>
+      <hr class="regla">
+      <p class="autor">Dr. Eligio A. Colmenares</p>
+      <p class="afil">Facultad de Ciencias · Universidad del Bío-Bío · Concepción, 2026</p>
+    </div>
+
+    <div class="caja">
+      <div class="cab">Objetivo general</div>
+      <div class="cuerpo">
+        Comprender el método de elementos finitos como una herramienta integrada para la resolución
+        numérica de ecuaciones en derivadas parciales, conectando la formulación variacional del problema
+        de Poisson, el estudio de su buena planteabilidad mediante el teorema de Lax–Milgram, la
+        aproximación de Galerkin sobre espacios de elementos finitos conformes, la estimación a priori del
+        error a través de la ortogonalidad de Galerkin y el lema de Céa, y su implementación computacional
+        en <span style="font-family:var(--sans)">FreeFEM</span>.
+      </div>
+    </div>
+
+    <div class="accesos">
+      <a class="acceso" href="#teoria"><div class="cab">Parte I · Teoría</div>
+        <p>Formulación variacional, Lax–Milgram, Galerkin, elementos $\mathbb{P}_1$ y estimaciones de error, con demostraciones.</p></a>
+      <a class="acceso" href="#codigo"><div class="cab">Parte II · Código FreeFEM</div>
+        <p>El programa completo de la guía, listo para copiar, descargar y ejecutar en FreeFEM++.</p></a>
+      <a class="acceso" href="#laboratorio"><div class="cab">Parte III · Laboratorio</div>
+        <p>Ejecute FreeFEM en el navegador, modifique el código y calcule errores y tasas de convergencia.</p></a>
+    </div>
+  </div>
+</section>
+
+<div class="marco">
+  <aside class="indice" aria-label="Índice">
+    <h4>TEORÍA</h4>
+    <ol>
+      <li><a href="#s-problema">1. Problema modelo</a></li>
+      <li><a href="#s-sobolev">2. Espacios de Sobolev</a></li>
+      <li><a href="#s-variacional">3. Formulación variacional</a></li>
+      <li><a href="#s-lax">4. Lax–Milgram</a></li>
+      <li><a href="#s-buen">5. Buen planteamiento</a></li>
+      <li><a href="#s-galerkin">6. Método de Galerkin</a></li>
+      <li><a href="#s-p1">7. Elementos $\mathbb{P}_1$</a></li>
+      <li><a href="#s-error">8. Error a priori</a></li>
+      <li><a href="#s-l2">9. Error en $L^2$</a></li>
+      <li><a href="#s-tasas">10. Orden experimental</a></li>
+    </ol>
+    <h4>COMPUTACIÓN</h4>
+    <ol>
+      <li><a href="#codigo">11. Código completo</a></li>
+      <li><a href="#anatomia">12. Del método al código</a></li>
+      <li><a href="#laboratorio">13. Laboratorio en línea</a></li>
+      <li><a href="#local">14. Ejecución local</a></li>
+    </ol>
+  </aside>
+
+<main>
+<p class="parte" id="teoria">PARTE I · TEORÍA</p>
+
+<!-- ================================================================
+     1. PROBLEMA MODELO
+     ================================================================ -->
+<section class="seccion" id="s-problema">
+  <h2>1. Problema modelo</h2>
+  <div class="caja">
+    <div class="cab">Problema de Poisson con condición de Dirichlet homogénea</div>
+    <div class="cuerpo">
+      Sea $\Omega\subset\mathbb{R}^2$ un dominio acotado y poligonal con frontera $\Gamma:=\partial\Omega$, y sea
+      $f\in L^2(\Omega)$. Se busca $u:\overline{\Omega}\to\mathbb{R}$ tal que
+      $$
+      \left\{\begin{aligned}
+        -\Delta u &= f && \text{en } \Omega,\\
+        u &= 0 && \text{sobre } \Gamma .
+      \end{aligned}\right. \tag{P}
+      $$
+      En los experimentos se usa $\Omega=(0,1)^2$ con solución exacta $u(x,y)=\sin(\pi x)\sin(\pi y)$, de modo que
+      $f(x,y)=2\pi^2\sin(\pi x)\sin(\pi y)$.
+    </div>
+  </div>
+  <p>
+    La ecuación modela, por ejemplo, la temperatura estacionaria de una placa con fuente de calor $f$ y borde a
+    temperatura cero, o el desplazamiento vertical de una membrana elástica fija en su contorno. La formulación
+    clásica exige $u\in C^2(\Omega)\cap C(\overline\Omega)$, lo que es demasiado restrictivo cuando $f$ es solo de
+    cuadrado integrable o el dominio tiene esquinas. El método de elementos finitos parte de una formulación
+    <em>débil</em>, que pide menos regularidad y se presta naturalmente a la aproximación.
+  </p>
+</section>
+
+<!-- ================================================================
+     2. ESPACIOS DE SOBOLEV
+     ================================================================ -->
+<section class="seccion" id="s-sobolev">
+  <h2>2. Espacios de Sobolev</h2>
+  <p>
+    Denotamos por $L^2(\Omega)$ el espacio de funciones de cuadrado integrable, con producto
+    $(u,v)_{0,\Omega}=\int_\Omega uv\,\mathrm{d}x$. Una función $v\in L^2(\Omega)$ tiene derivada débil
+    $\partial_i v\in L^2(\Omega)$ si $\int_\Omega v\,\partial_i\varphi = -\int_\Omega \partial_i v\,\varphi$ para toda
+    $\varphi\in C_c^\infty(\Omega)$. Definimos
+    $$
+      H^1(\Omega):=\{v\in L^2(\Omega):\ \nabla v\in L^2(\Omega)^2\},\qquad
+      H^1_0(\Omega):=\overline{C_c^\infty(\Omega)}^{\,\|\cdot\|_{1,\Omega}},
+    $$
+    con
+    $$
+      \|v\|_{0,\Omega}^2=\int_\Omega v^2,\qquad |v|_{1,\Omega}^2=\int_\Omega|\nabla v|^2,\qquad
+      \|v\|_{1,\Omega}^2=\|v\|_{0,\Omega}^2+|v|_{1,\Omega}^2 .
+    $$
+    $H^1(\Omega)$ es un espacio de Hilbert y, para dominios Lipschitz, $H^1_0(\Omega)$ coincide con las funciones de
+    $H^1(\Omega)$ de traza nula sobre $\Gamma$.
+  </p>
+
+  <div class="caja">
+    <div class="cab">Lema 1 <span class="nota">(Fórmula de Green)</span></div>
+    <div class="cuerpo">
+      Si $u\in H^2(\Omega)$ y $v\in H^1(\Omega)$, entonces
+      $$
+        \int_\Omega(-\Delta u)\,v\,\mathrm{d}x=\int_\Omega\nabla u\cdot\nabla v\,\mathrm{d}x-\int_\Gamma\frac{\partial u}{\partial\boldsymbol n}\,v\,\mathrm{d}s .
+      $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Para $u\in C^2(\overline\Omega)$ y $v\in C^1(\overline\Omega)$ se aplica el teorema de la divergencia al campo
+        $v\nabla u$: $\ \operatorname{div}(v\nabla u)=\nabla v\cdot\nabla u+v\,\Delta u$, luego
+        $$\int_\Omega(\nabla u\cdot\nabla v+v\Delta u)=\int_\Gamma v\,\nabla u\cdot\boldsymbol n\,\mathrm{d}s .$$
+        Reordenando se obtiene la fórmula. El caso general sigue por densidad de $C^\infty(\overline\Omega)$ en $H^2(\Omega)$
+        y en $H^1(\Omega)$, ya que ambos lados son continuos respecto de esas normas (el término de frontera lo es por la
+        continuidad del operador traza). <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Lema 2 <span class="nota">(Desigualdad de Poincaré)</span></div>
+    <div class="cuerpo">
+      Si $\Omega\subset(a,b)\times\mathbb{R}$, entonces para toda $v\in H^1_0(\Omega)$
+      $$ \|v\|_{0,\Omega}\le C_P\,|v|_{1,\Omega},\qquad C_P=\frac{b-a}{\sqrt2}. $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Sea primero $v\in C_c^\infty(\Omega)$, extendida por cero fuera de $\Omega$. Para cada $(x,y)$,
+        $$ v(x,y)=\int_a^x\partial_x v(t,y)\,\mathrm{d}t . $$
+        Por Cauchy–Schwarz, $|v(x,y)|^2\le (x-a)\int_a^b|\partial_x v(t,y)|^2\,\mathrm{d}t$. Integrando en $x\in(a,b)$:
+        $$ \int_a^b|v(x,y)|^2\,\mathrm{d}x\le\frac{(b-a)^2}{2}\int_a^b|\partial_x v(t,y)|^2\,\mathrm{d}t , $$
+        e integrando en $y$:
+        $\ \|v\|_{0,\Omega}^2\le\frac{(b-a)^2}{2}\|\partial_x v\|_{0,\Omega}^2\le\frac{(b-a)^2}{2}|v|_{1,\Omega}^2$.
+        Como ambos lados son continuos en $H^1$ y $C_c^\infty(\Omega)$ es denso en $H^1_0(\Omega)$, la desigualdad se
+        extiende a todo $H^1_0(\Omega)$. <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Corolario 1 <span class="nota">(equivalencia de normas)</span></div>
+    <div class="cuerpo">
+      En $H^1_0(\Omega)$ la seminorma $|\cdot|_{1,\Omega}$ es una norma equivalente a $\|\cdot\|_{1,\Omega}$:
+      $$ |v|_{1,\Omega}^2\le\|v\|_{1,\Omega}^2\le(1+C_P^2)\,|v|_{1,\Omega}^2\qquad\forall v\in H^1_0(\Omega). $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        La primera desigualdad es inmediata de la definición. Para la segunda,
+        $\|v\|_{1,\Omega}^2=\|v\|_{0,\Omega}^2+|v|_{1,\Omega}^2\le C_P^2|v|_{1,\Omega}^2+|v|_{1,\Omega}^2$ por el Lema 2.
+        <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     3. FORMULACIÓN VARIACIONAL
+     ================================================================ -->
+<section class="seccion" id="s-variacional">
+  <h2>3. Formulación variacional</h2>
+  <p>
+    Multiplicando $-\Delta u=f$ por una función test $v$ que se anula sobre $\Gamma$, integrando en $\Omega$ y usando
+    el Lema 1 (el término de frontera desaparece porque $v=0$ sobre $\Gamma$), se obtiene
+    $\int_\Omega\nabla u\cdot\nabla v=\int_\Omega fv$. Esto motiva la siguiente definición.
+  </p>
+  <div class="caja">
+    <div class="cab">Definición 1 <span class="nota">(problema débil)</span></div>
+    <div class="cuerpo">
+      Sea $V:=H^1_0(\Omega)$. Definimos
+      $$ a(u,v):=\int_\Omega\nabla u\cdot\nabla v\,\mathrm{d}x,\qquad F(v):=\int_\Omega f\,v\,\mathrm{d}x . $$
+      El <strong>problema variacional</strong> consiste en: hallar $u\in V$ tal que
+      $$ a(u,v)=F(v)\qquad\forall\,v\in V. \tag{PV} $$
+    </div>
+  </div>
+  <p>
+    Observe que (PV) solo involucra primeras derivadas, y que la condición $u=0$ sobre $\Gamma$ está incorporada en
+    el espacio $V$ (condición <em>esencial</em>). Una condición de Neumann $\partial_{\boldsymbol n}u=g$ sobre una parte
+    $\Gamma_N$ aparecería, en cambio, en el funcional: $F(v)=\int_\Omega fv+\int_{\Gamma_N}gv$ (condición <em>natural</em>).
+  </p>
+
+  <div class="caja">
+    <div class="cab">Proposición 1 <span class="nota">(consistencia)</span></div>
+    <div class="cuerpo">
+      <ol type="i">
+        <li>Si $u\in C^2(\overline\Omega)$ es solución clásica de (P), entonces $u$ es solución de (PV).</li>
+        <li>Si $u\in H^2(\Omega)\cap H^1_0(\Omega)$ es solución de (PV), entonces $-\Delta u=f$ en casi todo punto de
+            $\Omega$ y $u=0$ sobre $\Gamma$ en el sentido de trazas.</li>
+      </ol>
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        <p>(i) Como $u$ es continua y nula en $\Gamma$ con gradiente acotado, $u\in H^1_0(\Omega)$. Para
+        $v\in C_c^\infty(\Omega)$, el Lema 1 da $a(u,v)=\int_\Omega(-\Delta u)v=\int_\Omega fv=F(v)$. Ambos lados son
+        continuos en $v$ respecto de $\|\cdot\|_{1,\Omega}$, así que la igualdad se extiende por densidad a todo $v\in V$.</p>
+        <p>(ii) Para $v\in C_c^\infty(\Omega)$ el término de frontera del Lema 1 es nulo, luego
+        $\int_\Omega(-\Delta u-f)\,v=0$. Como $-\Delta u-f\in L^2(\Omega)$ y $C_c^\infty(\Omega)$ es denso en $L^2(\Omega)$,
+        se concluye $-\Delta u=f$ c.t.p. La condición de borde se cumple porque $u\in H^1_0(\Omega)$.
+        <span class="qed">∎</span></p>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     4. LAX–MILGRAM
+     ================================================================ -->
+<section class="seccion" id="s-lax">
+  <h2>4. Teorema de Lax–Milgram</h2>
+  <div class="caja">
+    <div class="cab">Teorema 1 <span class="nota">(Lax–Milgram)</span></div>
+    <div class="cuerpo">
+      Sean $V$ un espacio de Hilbert, $a:V\times V\to\mathbb{R}$ bilineal y $F\in V'$. Supongamos que existen $M,\alpha>0$ tales que
+      $$ |a(u,v)|\le M\|u\|_V\|v\|_V \quad\text{(continuidad)},\qquad a(v,v)\ge\alpha\|v\|_V^2\quad\text{(coercividad)} $$
+      para todo $u,v\in V$. Entonces existe una única $u\in V$ tal que $a(u,v)=F(v)$ para todo $v\in V$, y
+      $$ \|u\|_V\le\frac1\alpha\|F\|_{V'} . $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        <p><strong>Reformulación.</strong> Para cada $u\in V$, la aplicación $v\mapsto a(u,v)$ es lineal y continua.
+        Por el teorema de representación de Riesz existe un único $Au\in V$ con $(Au,v)_V=a(u,v)$ para todo $v$. El
+        operador $A:V\to V$ es lineal y $\|Au\|_V\le M\|u\|_V$. Análogamente existe $\tau F\in V$ con $(\tau F,v)_V=F(v)$ y
+        $\|\tau F\|_V=\|F\|_{V'}$. El problema equivale a resolver $Au=\tau F$, es decir, a probar que $A$ es biyectivo.</p>
+        <p><strong>$A$ es inyectivo con rango cerrado.</strong> Por coercividad,
+        $\alpha\|u\|_V^2\le a(u,u)=(Au,u)_V\le\|Au\|_V\|u\|_V$, luego $\|Au\|_V\ge\alpha\|u\|_V$. Esto da inyectividad. Si
+        $Au_n\to w$, entonces $\|u_n-u_m\|_V\le\alpha^{-1}\|Au_n-Au_m\|_V$, así que $(u_n)$ es de Cauchy y converge a
+        algún $u$; por continuidad $Au=w$. El rango $R(A)$ es cerrado.</p>
+        <p><strong>$R(A)$ es denso.</strong> Si $w\perp R(A)$, entonces $0=(Aw,w)_V=a(w,w)\ge\alpha\|w\|_V^2$, luego $w=0$.
+        Un subespacio cerrado con complemento ortogonal trivial es todo $V$: $A$ es sobreyectivo.</p>
+        <p><strong>Estabilidad.</strong> Tomando $v=u$: $\alpha\|u\|_V^2\le a(u,u)=F(u)\le\|F\|_{V'}\|u\|_V$.
+        <span class="qed">∎</span></p>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Proposición 2 <span class="nota">(caso simétrico: principio de Dirichlet)</span></div>
+    <div class="cuerpo">
+      Si además $a$ es simétrica, $u$ resuelve (PV) si y solo si $u$ minimiza en $V$ la energía
+      $$ J(v):=\tfrac12\,a(v,v)-F(v). $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Para $u,w\in V$, la simetría da
+        $\ J(u+w)=J(u)+\big[a(u,w)-F(w)\big]+\tfrac12 a(w,w)$.
+        Si $u$ resuelve (PV), el corchete es cero y $J(u+w)=J(u)+\tfrac12a(w,w)\ge J(u)$, con igualdad solo si $w=0$.
+        Recíprocamente, si $u$ minimiza $J$, la función $g(t)=J(u+tw)$ tiene un mínimo en $t=0$, luego
+        $0=g'(0)=a(u,w)-F(w)$ para todo $w\in V$. <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     5. BUEN PLANTEAMIENTO
+     ================================================================ -->
+<section class="seccion" id="s-buen">
+  <h2>5. Buen planteamiento del problema continuo</h2>
+  <div class="caja">
+    <div class="cab">Teorema 2 <span class="nota">(existencia, unicidad y estabilidad)</span></div>
+    <div class="cuerpo">
+      El problema (PV) tiene una única solución $u\in H^1_0(\Omega)$, y se cumple
+      $$ |u|_{1,\Omega}\le C_P\|f\|_{0,\Omega},\qquad \|u\|_{1,\Omega}\le(1+C_P^2)\,\|f\|_{0,\Omega}. $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        <p>$V=H^1_0(\Omega)$ es un espacio de Hilbert (subespacio cerrado de $H^1$). Verificamos las hipótesis del Teorema 1.</p>
+        <p><strong>Bilinealidad y simetría:</strong> inmediatas por la linealidad de la integral y del gradiente.</p>
+        <p><strong>Continuidad:</strong> por Cauchy–Schwarz,
+        $|a(u,v)|\le\|\nabla u\|_{0,\Omega}\|\nabla v\|_{0,\Omega}=|u|_{1,\Omega}|v|_{1,\Omega}\le\|u\|_{1,\Omega}\|v\|_{1,\Omega}$, es decir, $M=1$.</p>
+        <p><strong>Coercividad:</strong> por el Corolario 1,
+        $a(v,v)=|v|_{1,\Omega}^2\ge\dfrac{1}{1+C_P^2}\|v\|_{1,\Omega}^2$, es decir, $\alpha=(1+C_P^2)^{-1}$.</p>
+        <p><strong>$F\in V'$:</strong> $|F(v)|\le\|f\|_{0,\Omega}\|v\|_{0,\Omega}\le\|f\|_{0,\Omega}\|v\|_{1,\Omega}$, luego $\|F\|_{V'}\le\|f\|_{0,\Omega}$.</p>
+        <p>Lax–Milgram entrega existencia, unicidad y $\|u\|_{1,\Omega}\le\alpha^{-1}\|F\|_{V'}\le(1+C_P^2)\|f\|_{0,\Omega}$.
+        Para la cota en seminorma, tomando $v=u$ en (PV) y usando Poincaré:
+        $|u|_{1,\Omega}^2=\int_\Omega fu\le\|f\|_{0,\Omega}\|u\|_{0,\Omega}\le C_P\|f\|_{0,\Omega}|u|_{1,\Omega}$.
+        <span class="qed">∎</span></p>
+      </div></details>
+    </div>
+  </div>
+  <div class="caja gris">
+    <div class="cab">Observación <span class="nota">(problema de Neumann puro)</span></div>
+    <div class="cuerpo">
+      Para $-\Delta u=f$ con $\partial_{\boldsymbol n}u=0$ y $V=H^1(\Omega)$, la coercividad falla: las constantes
+      satisfacen $a(c,c)=0$. Además, tomando $v=1$ se ve que es necesaria la compatibilidad $\int_\Omega f=0$. La
+      unicidad se recupera trabajando en $\{v\in H^1(\Omega):\int_\Omega v=0\}$, donde vale la desigualdad de
+      Poincaré–Wirtinger.
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     6. GALERKIN
+     ================================================================ -->
+<section class="seccion" id="s-galerkin">
+  <h2>6. Método de Galerkin</h2>
+  <p>
+    Sea $V_h\subset V$ un subespacio de dimensión finita $N$ (aproximación <em>conforme</em>). El método de Galerkin
+    consiste en plantear el mismo problema variacional sobre $V_h$:
+  </p>
+  <div class="caja">
+    <div class="cab">Definición 2 <span class="nota">(problema de Galerkin)</span></div>
+    <div class="cuerpo">
+      Hallar $u_h\in V_h$ tal que
+      $$ a(u_h,v_h)=F(v_h)\qquad\forall\,v_h\in V_h. \tag{PV$_h$} $$
+      Si $\{\varphi_1,\dots,\varphi_N\}$ es una base de $V_h$ y $u_h=\sum_{j}U_j\varphi_j$, (PV$_h$) equivale al sistema lineal
+      $$ A\boldsymbol U=\boldsymbol F,\qquad A_{ij}=a(\varphi_j,\varphi_i),\qquad F_i=F(\varphi_i). $$
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Teorema 3 <span class="nota">(buen planteamiento discreto)</span></div>
+    <div class="cuerpo">
+      Bajo las hipótesis del Teorema 1, (PV$_h$) tiene una única solución $u_h\in V_h$ y
+      $$ \|u_h\|_V\le\frac1\alpha\|F\|_{V'} , $$
+      con una constante <em>independiente de $h$</em>. Además, la matriz $A$ es definida positiva, y simétrica si $a$ lo es.
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        <p><strong>Vía Lax–Milgram.</strong> $V_h$ es de dimensión finita, por tanto cerrado en $V$ y un espacio de Hilbert con
+        el producto heredado. Como $V_h\subset V$, la continuidad y coercividad se cumplen en $V_h$ con las mismas
+        constantes $M$ y $\alpha$, y $F|_{V_h}\in V_h'$ con $\|F|_{V_h}\|\le\|F\|_{V'}$. El Teorema 1 aplicado en $V_h$
+        da el resultado.</p>
+        <p><strong>Equivalencia con el sistema.</strong> Por linealidad, (PV$_h$) se cumple para todo $v_h$ si y solo si se
+        cumple para cada $\varphi_i$, es decir, $\sum_j a(\varphi_j,\varphi_i)U_j=F(\varphi_i)$.</p>
+        <p><strong>$A$ definida positiva.</strong> Para $\boldsymbol V\in\mathbb{R}^N$ y $v_h=\sum_jV_j\varphi_j$,
+        $$ \boldsymbol V^{\!\top}A\boldsymbol V=\sum_{i,j}V_i\,a(\varphi_j,\varphi_i)\,V_j=a(v_h,v_h)\ge\alpha\|v_h\|_V^2 , $$
+        que es estrictamente positivo si $\boldsymbol V\ne0$, pues la base es linealmente independiente. Una matriz definida
+        positiva es invertible (en dimensión finita, inyectividad equivale a biyectividad). Si $a$ es simétrica,
+        $A_{ij}=a(\varphi_j,\varphi_i)=a(\varphi_i,\varphi_j)=A_{ji}$. <span class="qed">∎</span></p>
+      </div></details>
+    </div>
+  </div>
+  <p>
+    Para el problema de Poisson, $A$ es simétrica y definida positiva: el sistema puede resolverse con Cholesky o
+    gradiente conjugado, y $u_h$ minimiza la energía $J$ sobre $V_h$ (Proposición 2 aplicada en $V_h$).
+  </p>
+</section>
+
+<!-- ================================================================
+     7. ELEMENTOS P1
+     ================================================================ -->
+<section class="seccion" id="s-p1">
+  <h2>7. Elementos finitos de Lagrange $\mathbb{P}_1$</h2>
+  <p>
+    Sea $\mathcal{T}_h$ una triangulación <em>conforme</em> de $\overline\Omega$: la intersección de dos triángulos
+    distintos es vacía, un vértice común o una arista común. Para $K\in\mathcal T_h$ sean $h_K=\operatorname{diam}K$,
+    $\rho_K$ el diámetro del círculo inscrito y $h=\max_K h_K$. La familia $\{\mathcal T_h\}$ es <em>regular</em> si existe
+    $\sigma>0$ con $h_K/\rho_K\le\sigma$ para todo $K$ y todo $h$. Definimos
+    $$ V_h:=\{v_h\in C(\overline\Omega):\ v_h|_K\in\mathbb{P}_1(K)\ \forall K\in\mathcal T_h,\ v_h=0\ \text{sobre }\Gamma\}. $$
+  </p>
+
+  <figure class="caja">
+    <div class="cab">Figura 1 <span class="nota">(malla uniforme de $(0,1)^2$ y función base nodal)</span></div>
+    <div class="cuerpo">
+      <svg viewBox="0 0 640 230" class="grafico" role="img" aria-label="Malla triangular uniforme con el soporte de una función base sombreado, y el perfil de la función sombrero">
+        <g transform="translate(40,15)">
+          <polygon points="150,100 150,50 100,50 50,100 50,150 100,150" fill="#d5e3ef"/>
+          <g stroke="#50677D" stroke-width="1">
+            <line x1="0" y1="0" x2="0" y2="200"/><line x1="50" y1="0" x2="50" y2="200"/><line x1="100" y1="0" x2="100" y2="200"/><line x1="150" y1="0" x2="150" y2="200"/><line x1="200" y1="0" x2="200" y2="200"/>
+            <line x1="0" y1="0" x2="200" y2="0"/><line x1="0" y1="50" x2="200" y2="50"/><line x1="0" y1="100" x2="200" y2="100"/><line x1="0" y1="150" x2="200" y2="150"/><line x1="0" y1="200" x2="200" y2="200"/>
+            <line x1="0" y1="200" x2="200" y2="0"/><line x1="0" y1="150" x2="150" y2="0"/><line x1="0" y1="100" x2="100" y2="0"/><line x1="0" y1="50" x2="50" y2="0"/>
+            <line x1="50" y1="200" x2="200" y2="50"/><line x1="100" y1="200" x2="200" y2="100"/><line x1="150" y1="200" x2="200" y2="150"/>
+          </g>
+          <rect x="0" y="0" width="200" height="200" fill="none" stroke="#1B3A57" stroke-width="2"/>
+          <g fill="#50677D"><circle cx="50" cy="50" r="3"/><circle cx="100" cy="50" r="3"/><circle cx="150" cy="50" r="3"/><circle cx="50" cy="100" r="3"/><circle cx="150" cy="100" r="3"/><circle cx="50" cy="150" r="3"/><circle cx="100" cy="150" r="3"/><circle cx="150" cy="150" r="3"/></g>
+          <circle cx="100" cy="100" r="5" fill="#1B3A57"/>
+          <text x="108" y="117" font-family="KaTeX_Math, serif" font-style="italic" font-size="15" fill="#1B3A57">xᵢ</text>
+        </g>
+        <g transform="translate(290,40)" font-family="Fira Sans, sans-serif" font-size="13" fill="#5E6A75">
+          <rect x="0" y="0" width="16" height="12" fill="#d5e3ef" stroke="#50677D"/><text x="24" y="11">soporte de φᵢ</text>
+          <circle cx="8" cy="34" r="5" fill="#1B3A57"/><text x="24" y="39">nodo interior xᵢ</text>
+        </g>
+        <g transform="translate(430,30)">
+          <line x1="-10" y1="150" x2="190" y2="150" stroke="#5E6A75" marker-end="url(#fl)"/>
+          <line x1="0" y1="158" x2="0" y2="10" stroke="#5E6A75" marker-end="url(#fl)"/>
+          <polyline points="0,150 45,150 90,40 135,150 180,150" fill="none" stroke="#1B3A57" stroke-width="2.4"/>
+          <line x1="90" y1="40" x2="90" y2="150" stroke="#C9D1D9" stroke-dasharray="4 3"/>
+          <text x="-14" y="45" font-family="KaTeX_Main, serif" font-size="14">1</text>
+          <text x="84" y="170" font-family="KaTeX_Math, serif" font-style="italic" font-size="14">xᵢ</text>
+          <text x="112" y="70" font-family="KaTeX_Math, serif" font-style="italic" font-size="15" fill="#3D7AA8">φᵢ</text>
+        </g>
+        <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5E6A75"/></marker></defs>
+      </svg>
+    </div>
+  </figure>
+
+  <div class="caja">
+    <div class="cab">Proposición 3 <span class="nota">(conformidad: $V_h\subset H^1_0(\Omega)$)</span></div>
+    <div class="cuerpo">
+      Toda función continua y polinomial a trozos sobre $\mathcal T_h$ pertenece a $H^1(\Omega)$, y su derivada débil
+      es la derivada elemento a elemento. En consecuencia $V_h\subset H^1_0(\Omega)$.
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Sea $v$ continua con $v|_K\in\mathbb{P}_1(K)$, y sea $w_i$ la función definida por $w_i|_K=\partial_i(v|_K)$, que
+        está en $L^2(\Omega)$. Para $\varphi\in C_c^\infty(\Omega)$, integrando por partes en cada triángulo,
+        $$ \int_\Omega v\,\partial_i\varphi=\sum_{K}\Big(-\int_K w_i\varphi+\int_{\partial K}v\,\varphi\,n_{K,i}\,\mathrm{d}s\Big). $$
+        Cada arista interior aparece dos veces, con normales opuestas y el mismo valor de $v$ (por continuidad), así que
+        esas contribuciones se cancelan; en las aristas de $\Gamma$ se tiene $\varphi=0$. Luego
+        $\int_\Omega v\,\partial_i\varphi=-\int_\Omega w_i\varphi$, es decir, $\partial_iv=w_i\in L^2(\Omega)$. Si además
+        $v=0$ sobre $\Gamma$, su traza es nula y $v\in H^1_0(\Omega)$. <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+
+  <p>
+    Una función de $V_h$ queda determinada por sus valores en los vértices interiores $x_1,\dots,x_N$. La <strong>base
+    nodal</strong> $\{\varphi_i\}$ se define por $\varphi_i(x_j)=\delta_{ij}$: cada $\varphi_i$ es una pirámide («función
+    sombrero») cuyo soporte son los triángulos que comparten el vértice $x_i$ (Figura 1). Así, $\dim V_h=N$ y
+    $A_{ij}\ne0$ solo si $x_i$ y $x_j$ son vértices de un mismo triángulo: la matriz es <strong>dispersa</strong>.
+  </p>
+
+  <div class="caja">
+    <div class="cab">Proposición 4 <span class="nota">(matriz de rigidez elemental)</span></div>
+    <div class="cuerpo">
+      Sobre un triángulo $K$ con coordenadas baricéntricas $\lambda_1,\lambda_2,\lambda_3$, la contribución local es
+      $$ A^K_{ij}=\int_K\nabla\lambda_j\cdot\nabla\lambda_i=|K|\,\nabla\lambda_j\cdot\nabla\lambda_i . $$
+      En el triángulo de referencia $\widehat K$ de vértices $(0,0),(1,0),(0,1)$:
+      $$ \widehat A=\frac12\begin{pmatrix}2&-1&-1\\-1&1&0\\-1&0&1\end{pmatrix}. $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Las funciones $\lambda_i$ son afines, así que sus gradientes son constantes en $K$ y la integral es $|K|$ por el
+        producto. En $\widehat K$: $\widehat\lambda_1=1-\hat x-\hat y$, $\widehat\lambda_2=\hat x$, $\widehat\lambda_3=\hat y$,
+        con $\nabla\widehat\lambda_1=(-1,-1)$, $\nabla\widehat\lambda_2=(1,0)$, $\nabla\widehat\lambda_3=(0,1)$ y $|\widehat K|=\tfrac12$.
+        Los productos son $\nabla\widehat\lambda_1\cdot\nabla\widehat\lambda_1=2$, $\nabla\widehat\lambda_1\cdot\nabla\widehat\lambda_2=\nabla\widehat\lambda_1\cdot\nabla\widehat\lambda_3=-1$,
+        $\nabla\widehat\lambda_2\cdot\nabla\widehat\lambda_2=\nabla\widehat\lambda_3\cdot\nabla\widehat\lambda_3=1$ y $\nabla\widehat\lambda_2\cdot\nabla\widehat\lambda_3=0$.
+        Multiplicando por $\tfrac12$ se obtiene $\widehat A$. <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+  <div class="caja gris">
+    <div class="cab">Observación <span class="nota">(relación con diferencias finitas)</span></div>
+    <div class="cuerpo">
+      La matriz $\widehat A$ no depende del tamaño del triángulo (en 2D la escala se cancela). En la malla uniforme de la
+      Figura 1, cada triángulo es rectángulo isósceles y los catetos son ortogonales, por lo que las conexiones a
+      través de las diagonales se anulan. Ensamblando las seis contribuciones alrededor de un nodo interior se obtiene
+      la fila
+      $$ 4U_{i,j}-U_{i+1,j}-U_{i-1,j}-U_{i,j+1}-U_{i,j-1}=F_{i,j}\approx h^2 f(x_{i,j}), $$
+      el clásico esquema de cinco puntos, donde $h$ es el lado de los cuadrados.
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     8. ERROR A PRIORI
+     ================================================================ -->
+<section class="seccion" id="s-error">
+  <h2>8. Análisis del error a priori</h2>
+  <div class="caja">
+    <div class="cab">Lema 3 <span class="nota">(ortogonalidad de Galerkin)</span></div>
+    <div class="cuerpo">
+      Si $u$ resuelve (PV) y $u_h$ resuelve (PV$_h$) con $V_h\subset V$, entonces
+      $$ a(u-u_h,\,v_h)=0\qquad\forall\,v_h\in V_h. $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Como $V_h\subset V$, podemos tomar $v=v_h$ en (PV): $a(u,v_h)=F(v_h)$. Restando (PV$_h$),
+        $a(u,v_h)-a(u_h,v_h)=0$, y por bilinealidad $a(u-u_h,v_h)=0$. <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+  <p>
+    Geométricamente, el error $u-u_h$ es «$a$-ortogonal» a $V_h$: cuando $a$ es simétrica, $u_h$ es la proyección
+    ortogonal de $u$ sobre $V_h$ respecto del producto interior $a(\cdot,\cdot)$.
+  </p>
+
+  <div class="caja">
+    <div class="cab">Teorema 4 <span class="nota">(Lema de Céa)</span></div>
+    <div class="cuerpo">
+      Bajo las hipótesis del Teorema 1 y $V_h\subset V$,
+      $$ \|u-u_h\|_V\le\frac M\alpha\,\inf_{v_h\in V_h}\|u-v_h\|_V . $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Sea $v_h\in V_h$ arbitrario. Como $v_h-u_h\in V_h$, el Lema 3 da $a(u-u_h,v_h-u_h)=0$. Entonces
+        $$ \alpha\|u-u_h\|_V^2\le a(u-u_h,u-u_h)=a(u-u_h,u-v_h)+\underbrace{a(u-u_h,v_h-u_h)}_{=0}\le M\|u-u_h\|_V\|u-v_h\|_V . $$
+        Dividiendo por $\|u-u_h\|_V$ (si es nulo no hay nada que probar) y tomando ínfimo en $v_h$ se concluye.
+        <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Corolario 2 <span class="nota">(mejor aproximación en la norma de energía)</span></div>
+    <div class="cuerpo">
+      Si $a$ es simétrica y $\|v\|_a:=a(v,v)^{1/2}$, entonces $\ \|u-u_h\|_a=\min_{v_h\in V_h}\|u-v_h\|_a$. Para Poisson,
+      $\|\cdot\|_a=|\cdot|_{1,\Omega}$, así que
+      $$ |u-u_h|_{1,\Omega}=\min_{v_h\in V_h}|u-v_h|_{1,\Omega}. $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Por el Lema 3 y Cauchy–Schwarz para el producto interior $a$:
+        $\|u-u_h\|_a^2=a(u-u_h,u-v_h)\le\|u-u_h\|_a\|u-v_h\|_a$, luego $\|u-u_h\|_a\le\|u-v_h\|_a$ para todo $v_h$; el mínimo
+        se alcanza en $v_h=u_h$. <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+
+  <p>
+    El lema de Céa reduce el análisis del error a un problema de <em>teoría de aproximación</em>: basta exhibir algún
+    $v_h\in V_h$ cercano a $u$. La elección natural es el interpolante de Lagrange $I_hu\in V_h$, que coincide con $u$
+    en los vértices (bien definido para $u\in H^2(\Omega)$, pues en 2D $H^2(\Omega)\subset C(\overline\Omega)$).
+  </p>
+
+  <div class="caja">
+    <div class="cab">Teorema 5 <span class="nota">(error de interpolación $\mathbb{P}_1$)</span></div>
+    <div class="cuerpo">
+      Para una familia regular de triangulaciones existe $C$, dependiente solo de $\sigma$, tal que para $u\in H^2(\Omega)$
+      y todo $K\in\mathcal T_h$
+      $$ |u-I_hu|_{1,K}\le C\,h_K\,|u|_{2,K},\qquad \|u-I_hu\|_{0,K}\le C\,h_K^2\,|u|_{2,K}. $$
+      <details class="dem"><summary>Idea de la demostración</summary><div class="cont">
+        <p><strong>1. Reducción al elemento de referencia.</strong> Sea $F_K(\hat x)=B_K\hat x+b_K$ la transformación afín de
+        $\widehat K$ en $K$. La interpolación conmuta con $F_K$: $\widehat{I_hu}=\widehat I\hat u$.</p>
+        <p><strong>2. Lema de Bramble–Hilbert.</strong> El operador $\hat u\mapsto\hat u-\widehat I\hat u$ es lineal y continuo de
+        $H^2(\widehat K)$ en $H^1(\widehat K)$, y se anula sobre $\mathbb{P}_1$. Por tanto
+        $\|\hat u-\widehat I\hat u\|_{1,\widehat K}\le\widehat C\,|\hat u|_{2,\widehat K}$.</p>
+        <p><strong>3. Escalamiento.</strong> Con $\|B_K\|\le h_K/\hat\rho$ y $\|B_K^{-1}\|\le\hat h/\rho_K$ se obtiene
+        $|v|_{m,K}\approx\|B_K^{-1}\|^m|\det B_K|^{1/2}|\hat v|_{m,\widehat K}$ y su recíproca. Combinando,
+        $|u-I_hu|_{1,K}\le C\,\dfrac{h_K^2}{\rho_K}|u|_{2,K}\le C\sigma h_K|u|_{2,K}$, y análogamente en $L^2$.
+        <span class="qed">∎</span></p>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Corolario 3 <span class="nota">(convergencia en $H^1$)</span></div>
+    <div class="cuerpo">
+      Si $u\in H^2(\Omega)$, entonces
+      $$ |u-u_h|_{1,\Omega}\le C\,h\,|u|_{2,\Omega},\qquad \|u-u_h\|_{1,\Omega}\le C\,h\,|u|_{2,\Omega}. $$
+      Más generalmente, con elementos $\mathbb{P}_k$ y $u\in H^{k+1}(\Omega)$: $\ \|u-u_h\|_{1,\Omega}=\mathcal O(h^k)$.
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Por el Corolario 2 con $v_h=I_hu$ y el Teorema 5,
+        $$ |u-u_h|_{1,\Omega}^2\le|u-I_hu|_{1,\Omega}^2=\sum_K|u-I_hu|_{1,K}^2\le C^2\sum_Kh_K^2|u|_{2,K}^2\le C^2h^2|u|_{2,\Omega}^2 . $$
+        La cota en norma completa sigue del Corolario 1, ya que $u-u_h\in H^1_0(\Omega)$. <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     9. AUBIN–NITSCHE
+     ================================================================ -->
+<section class="seccion" id="s-l2">
+  <h2>9. Error en $L^2$: argumento de Aubin–Nitsche</h2>
+  <div class="caja">
+    <div class="cab">Teorema 6 <span class="nota">(Aubin–Nitsche)</span></div>
+    <div class="cuerpo">
+      Supongamos que $\Omega$ es convexo, de modo que para cada $g\in L^2(\Omega)$ la solución $z\in H^1_0(\Omega)$ de
+      $a(v,z)=(g,v)_{0,\Omega}\ \forall v$ pertenece a $H^2(\Omega)$ con $|z|_{2,\Omega}\le C_R\|g\|_{0,\Omega}$
+      (regularidad elíptica). Entonces, si $u\in H^2(\Omega)$,
+      $$ \|u-u_h\|_{0,\Omega}\le C\,h^2\,|u|_{2,\Omega}. $$
+      <details class="dem"><summary>Demostración</summary><div class="cont">
+        Sea $e=u-u_h$ y sea $z$ la solución del problema dual con dato $g=e$. Tomando $v=e$ y usando la ortogonalidad de
+        Galerkin con $v_h=I_hz$:
+        $$ \|e\|_{0,\Omega}^2=a(e,z)=a(e,z-I_hz)\le|e|_{1,\Omega}\,|z-I_hz|_{1,\Omega}\le|e|_{1,\Omega}\,Ch\,|z|_{2,\Omega}\le C\,C_R\,h\,|e|_{1,\Omega}\|e\|_{0,\Omega}. $$
+        Luego $\|e\|_{0,\Omega}\le C h\,|e|_{1,\Omega}$, y por el Corolario 3, $\|e\|_{0,\Omega}\le Ch^2|u|_{2,\Omega}$.
+        <span class="qed">∎</span>
+      </div></details>
+    </div>
+  </div>
+  <p>El cuadrado $(0,1)^2$ es convexo, así que para el problema modelo se esperan los siguientes órdenes:</p>
+  <div class="tabla-wrap">
+    <table class="t">
+      <thead><tr><th>Espacio</th><th>$\|u-u_h\|_{1,\Omega}$</th><th>$\|u-u_h\|_{0,\Omega}$</th></tr></thead>
+      <tbody>
+        <tr><td>$\mathbb{P}_1$</td><td>$\mathcal O(h)$</td><td>$\mathcal O(h^2)$</td></tr>
+        <tr><td>$\mathbb{P}_2$</td><td>$\mathcal O(h^2)$</td><td>$\mathcal O(h^3)$</td></tr>
+        <tr><td>$\mathbb{P}_k$</td><td>$\mathcal O(h^k)$</td><td>$\mathcal O(h^{k+1})$</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================================================================
+     10. ORDEN EXPERIMENTAL
+     ================================================================ -->
+<section class="seccion" id="s-tasas">
+  <h2>10. Orden de convergencia experimental</h2>
+  <p>
+    Si $e(h)\approx C\,h^p$, para dos mallas consecutivas $e_{i-1}/e_i\approx(h_{i-1}/h_i)^p$, de donde
+    $$ r_i=\frac{\log(e_{i-1}/e_i)}{\log(h_{i-1}/h_i)}\ \longrightarrow\ p . $$
+    La siguiente tabla se obtuvo ejecutando el código de la sección 11 (elementos $\mathbb{P}_1$, $n=4,8,\dots,64$),
+    con $h=\max_K\operatorname{diam}K=\sqrt2/n$:
+  </p>
+  <div class="tabla-wrap">
+    <table class="t num">
+      <thead><tr><th>$n$</th><th>$h$</th><th>ndof</th><th>$\|u-u_h\|_{0,\Omega}$</th><th>tasa</th><th>$|u-u_h|_{1,\Omega}$</th><th>tasa</th></tr></thead>
+      <tbody>
+        <tr><td>4</td><td>0.353553</td><td>25</td><td>7.90906e-2</td><td>—</td><td>0.838544</td><td>—</td></tr>
+        <tr><td>8</td><td>0.176777</td><td>81</td><td>2.11337e-2</td><td>1.904</td><td>0.431798</td><td>0.958</td></tr>
+        <tr><td>16</td><td>0.0883883</td><td>289</td><td>5.37749e-3</td><td>1.975</td><td>0.217536</td><td>0.989</td></tr>
+        <tr><td>32</td><td>0.0441942</td><td>1089</td><td>1.35044e-3</td><td>1.994</td><td>0.108975</td><td>0.997</td></tr>
+        <tr><td>64</td><td>0.0220971</td><td>4225</td><td>3.37993e-4</td><td>1.998</td><td>0.0545137</td><td>0.999</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Las tasas tienden a $2$ en $L^2$ y a $1$ en $H^1$, en acuerdo con el Corolario 3 y el Teorema 6. (FreeFEM cuenta
+    en <code class="in">ndof</code> también los nodos de frontera; las incógnitas libres son $(n-1)^2$.)
+  </p>
+</section>
+
+<!-- ================================================================
+     11. CÓDIGO
+     ================================================================ -->
+<p class="parte">PARTE II · COMPUTACIÓN</p>
+<section class="seccion" id="codigo">
+  <h2>11. Código completo en FreeFEM</h2>
+  <p>
+    El programa resuelve el problema modelo con elementos $\mathbb{P}_1$ sobre cinco mallas uniformes, calcula los
+    errores en $L^2$ y $H^1$ y estima las tasas de convergencia. Es el mismo código de la guía impresa (con la misma
+    numeración de líneas) y fue verificado en FreeFEM.
+  </p>
+  <div class="caja">
+    <div class="cab">Código: <span style="font-family:var(--mono);font-weight:500">poisson_P1.edp</span></div>
+    <div class="cuerpo" style="padding:10px 0 0">
+      <div class="barra" style="padding:0 14px">
+        <button class="primario" type="button" data-copiar="fuente">Copiar código</button>
+        <button type="button" data-descargar="fuente">Descargar .edp</button>
+        <a class="btn" href="#laboratorio">Abrir en el laboratorio</a>
+        <span class="estado-copia" aria-live="polite"></span>
+      </div>
+      <pre class="codigo" id="codigo-resaltado" aria-label="Código FreeFEM"></pre>
+    </div>
+  </div>
+</section>
+
+<!-- Fuente única del programa: se copia, descarga, resalta y ejecuta desde aquí -->
+<script type="text/plain" id="fuente">// =============================================================
+//  EPRIMA 2026 - Cursillo de Analisis Numerico de EDP
+//  Problema de Poisson:  -Lap(u) = f  en  Omega = (0,1)^2
+//                            u = 0  en  la frontera de Omega
+//  Elementos finitos de Lagrange P1 y estudio de convergencia
+// =============================================================
+
+// ---------- 1. Datos del problema ----------
+func uex   = sin(pi*x)*sin(pi*y);          // solucion exacta
+func dxuex = pi*cos(pi*x)*sin(pi*y);       // derivada de uex en x
+func dyuex = pi*sin(pi*x)*cos(pi*y);       // derivada de uex en y
+func f     = 2.*pi^2*sin(pi*x)*sin(pi*y);  // fuente: f = -Lap(uex)
+
+macro grad(w) [dx(w), dy(w)] // EOM
+
+// ---------- 2. Parametros del experimento ----------
+int nref = 5;                    // numero de mallas
+int n    = 4;                    // subdivisiones por lado (malla inicial)
+real[int] hmax(nref), errL2(nref), errH1(nref);
+int[int]  ndof(nref);
+
+// ---------- 3. Ciclo de refinamiento ----------
+for (int i = 0; i < nref; i++) {
+    mesh Th = square(n, n);              // triangulacion de (0,1)^2
+    fespace Vh(Th, P1);                  // espacio de elementos finitos
+    fespace Ph(Th, P0);                  // constantes por elemento
+
+    Vh uh, vh;                           // incognita y funcion test
+
+    // Problema de Galerkin: a(uh,vh) = F(vh) para todo vh
+    solve Poisson(uh, vh, solver = sparsesolver)
+        = int2d(Th)( grad(uh)'*grad(vh) )
+        - int2d(Th)( f*vh )
+        + on(1, 2, 3, 4, uh = 0);
+
+    // Tamano de malla: h = max diam(K)
+    Ph hK = hTriangle;
+    hmax[i] = hK[].max;
+    ndof[i] = Vh.ndof;
+
+    // Errores en norma L2 y seminorma H1
+    errL2[i] = sqrt( int2d(Th, qforder = 5)( (uh - uex)^2 ) );
+    errH1[i] = sqrt( int2d(Th, qforder = 5)( (dx(uh) - dxuex)^2
+                                           + (dy(uh) - dyuex)^2 ) );
+
+    plot(uh, fill = true, value = true, wait = false,
+         cmm = "Solucion discreta uh,  n = " + n);
+
+    n *= 2;                              // refinamiento uniforme
+}
+
+// ---------- 4. Tasas de convergencia experimentales ----------
+cout << "h \t ndof \t errL2 \t tasaL2 \t errH1 \t tasaH1" << endl;
+for (int i = 0; i < nref; i++) {
+    real rL2 = 0., rH1 = 0.;
+    if (i > 0) {
+        rL2 = log(errL2[i-1]/errL2[i]) / log(hmax[i-1]/hmax[i]);
+        rH1 = log(errH1[i-1]/errH1[i]) / log(hmax[i-1]/hmax[i]);
+    }
+    cout << hmax[i] << " \t " << ndof[i]  << " \t "
+         << errL2[i] << " \t " << rL2     << " \t "
+         << errH1[i] << " \t " << rH1     << endl;
+}
+</script>
+
+<!-- ================================================================
+     12. ANATOMÍA
+     ================================================================ -->
+<section class="seccion" id="anatomia">
+  <h2>12. Del método al código</h2>
+  <p>Cada objeto de la teoría tiene una instrucción concreta en el programa:</p>
+  <div class="tabla-wrap">
+    <table class="t">
+      <thead><tr><th class="izq">Objeto teórico</th><th>Líneas</th><th class="izq">Instrucción FreeFEM</th><th class="izq">Comentario</th></tr></thead>
+      <tbody>
+        <tr><td class="izq">Solución exacta $u$ y su gradiente</td><td>9–11</td><td class="izq"><code class="in">func uex</code>, <code class="in">dxuex</code>, <code class="in">dyuex</code></td><td class="izq">Solo se usan para medir el error.</td></tr>
+        <tr><td class="izq">Fuente $f=-\Delta u$</td><td>12</td><td class="izq"><code class="in">func f</code></td><td class="izq"><code class="in">x</code>, <code class="in">y</code> son variables reservadas.</td></tr>
+        <tr><td class="izq">Gradiente $\nabla w$</td><td>14</td><td class="izq"><code class="in">macro grad(w)</code></td><td class="izq">Sustitución textual; <code class="in">// EOM</code> cierra la macro.</td></tr>
+        <tr><td class="izq">Triangulación $\mathcal T_h$</td><td>24</td><td class="izq"><code class="in">mesh Th = square(n, n)</code></td><td class="izq">$2n^2$ triángulos; etiquetas de borde 1–4.</td></tr>
+        <tr><td class="izq">Espacio $V_h$ ($\mathbb{P}_1$)</td><td>25</td><td class="izq"><code class="in">fespace Vh(Th, P1)</code></td><td class="izq">Cambiar a <code class="in">P2</code> para elementos cuadráticos.</td></tr>
+        <tr><td class="izq">$u_h$ y función test $v_h$</td><td>28</td><td class="izq"><code class="in">Vh uh, vh</code></td><td class="izq"></td></tr>
+        <tr><td class="izq">Forma bilineal $a(u_h,v_h)$</td><td>32</td><td class="izq"><code class="in">int2d(Th)(grad(uh)'*grad(vh))</code></td><td class="izq"><code class="in">'</code> es la transpuesta: producto escalar.</td></tr>
+        <tr><td class="izq">Funcional $F(v_h)$</td><td>33</td><td class="izq"><code class="in">- int2d(Th)(f*vh)</code></td><td class="izq">FreeFEM escribe $a(u_h,v_h)-F(v_h)=0$.</td></tr>
+        <tr><td class="izq">Condición $u_h=0$ sobre $\Gamma$</td><td>34</td><td class="izq"><code class="in">on(1,2,3,4, uh=0)</code></td><td class="izq">Condición esencial (penalización).</td></tr>
+        <tr><td class="izq">Ensamblaje y solución de $A\boldsymbol U=\boldsymbol F$</td><td>31–34</td><td class="izq"><code class="in">solve ... solver=sparsesolver</code></td><td class="izq">Solver directo disperso.</td></tr>
+        <tr><td class="izq">$h=\max_K h_K$</td><td>37–38</td><td class="izq"><code class="in">Ph hK = hTriangle; hK[].max</code></td><td class="izq"><code class="in">hK[]</code> es el vector de grados de libertad.</td></tr>
+        <tr><td class="izq">$\|u-u_h\|_{0,\Omega}$, $|u-u_h|_{1,\Omega}$</td><td>42–44</td><td class="izq"><code class="in">sqrt(int2d(Th, qforder=5)(...))</code></td><td class="izq">Cuadratura de orden 5 para no contaminar el error.</td></tr>
+        <tr><td class="izq">Refinamiento uniforme $h\mapsto h/2$</td><td>49</td><td class="izq"><code class="in">n *= 2</code></td><td class="izq"></td></tr>
+        <tr><td class="izq">Tasas $r_i$</td><td>57–58</td><td class="izq"><code class="in">log(errL2[i-1]/errL2[i]) / log(...)</code></td><td class="izq">Sección 10.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Algoritmo <span class="nota">(MEF $\mathbb{P}_1$ con estudio de convergencia)</span></div>
+    <div class="cuerpo">
+      <p style="margin:0 0 6px"><strong>Entrada:</strong> $f$, $u$ exacta, número de mallas $n_{\text{ref}}$, subdivisión inicial $n_0$.
+      <strong>Salida:</strong> errores $e^{L^2}_i$, $e^{H^1}_i$ y tasas $r_i$.</p>
+      <ol class="pasos">
+        <li>Definir los datos $f$, $u$, $\nabla u$ y el operador $\nabla$.</li>
+        <li>Para $i=0,\dots,n_{\text{ref}}-1$, con $n=n_0 2^i$: construir la malla $\mathcal T_h$ de $(0,1)^2$.</li>
+        <li>Construir el espacio $V_h$ de Lagrange $\mathbb{P}_1$ sobre $\mathcal T_h$.</li>
+        <li>Ensamblar $A$ y $\boldsymbol F$, imponer $u_h=0$ en $\Gamma$ y resolver $A\boldsymbol U=\boldsymbol F$.</li>
+        <li>Calcular $h_i=\max_K h_K$ y el número de grados de libertad.</li>
+        <li>Calcular $e^{L^2}_i=\|u-u_h\|_{0,\Omega}$ y $e^{H^1}_i=|u-u_h|_{1,\Omega}$ con cuadratura precisa.</li>
+        <li>Refinar: $n\leftarrow 2n$.</li>
+        <li>Para $i\ge1$, calcular $r_i=\log(e_{i-1}/e_i)/\log(h_{i-1}/h_i)$ y reportar la tabla.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     13. LABORATORIO
+     ================================================================ -->
+<section class="seccion" id="laboratorio">
+  <h2>13. Laboratorio en línea</h2>
+  <p>
+    Este laboratorio ejecuta <strong>FreeFEM JS</strong> (FreeFEM v3.5 compilado a JavaScript por Antoine Le Hyaric)
+    directamente en su navegador: no hay servidor ni instalación. Edite el código, pulse <em>Ejecutar</em> y se
+    mostrarán el gráfico de $u_h$, la tabla de errores y tasas y su gráfico log–log. La primera ejecución descarga
+    el motor (≈ 17,7 MB); las siguientes son inmediatas.
+  </p>
+
+  <div class="barra">
+    <button class="primario" type="button" id="btn-ejecutar">▶ Ejecutar</button>
+    <button type="button" id="btn-p2">Variante $\mathbb{P}_2$</button>
+    <button type="button" id="btn-restaurar">Restaurar código</button>
+    <button type="button" data-copiar="editor">Copiar</button>
+    <button type="button" data-descargar="editor">Descargar .edp</button>
+    <span class="estado-copia" aria-live="polite"></span>
+  </div>
+
+  <div class="lab-grid">
+    <div class="caja" style="margin:0">
+      <div class="cab">Editor</div>
+      <div class="cuerpo" style="padding:0">
+        <textarea class="editor" id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Editor de código FreeFEM"></textarea>
+      </div>
+    </div>
+    <div class="caja" style="margin:0; align-self:start">
+      <div class="cab">Solución discreta $u_h$</div>
+      <div class="cuerpo" style="padding:0">
+        <div class="lienzo-wrap"><canvas id="ffjs-canvas"></canvas></div>
+        <div class="estado" id="estado" style="padding:6px 12px 8px" aria-live="polite">Listo para ejecutar.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Errores y tasas de convergencia</div>
+    <div class="cuerpo">
+      <div class="res-grid" id="resultados">
+        <div class="vacio">Ejecute el código para ver la tabla y el gráfico log–log.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="cab">Consola de FreeFEM</div>
+    <div class="cuerpo" style="padding:0">
+      <pre class="consola" id="consola">(sin salida)</pre>
+    </div>
+  </div>
+
+  <div class="caja gris">
+    <div class="cab">Actividades sugeridas</div>
+    <div class="cuerpo">
+      <ul class="vinetas" style="margin:0">
+        <li>Cambie <code class="in">nref</code> a 6. ¿Se estabilizan las tasas en 1 y 2?</li>
+        <li>Pulse <em>Variante $\mathbb{P}_2$</em> y compare con la tabla de la sección 9.</li>
+        <li>Reemplace la solución exacta por $u=x(1-x)y(1-y)$ (recalcule $f$ y el gradiente). ¿Qué ocurre con el error en $\mathbb{P}_2$? ¿Por qué?</li>
+        <li>Elimine <code class="in">qforder = 5</code> en el cálculo de errores y observe el efecto en las tasas $\mathbb{P}_2$.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     14. EJECUCIÓN LOCAL
+     ================================================================ -->
+<section class="seccion" id="local">
+  <h2>14. Ejecución local con FreeFEM++</h2>
+  <ol class="pasos">
+    <li>Descargue e instale FreeFEM desde <a href="https://freefem.org" target="_blank" rel="noopener">freefem.org</a> (Windows, macOS o Linux).</li>
+    <li>Guarde el código con el botón <em>Descargar .edp</em> como <code class="in">poisson_P1.edp</code>.</li>
+    <li>Ejecútelo desde una terminal con <code class="in">FreeFem++ poisson_P1.edp</code>, o arrastrando el archivo sobre el ícono de FreeFEM.</li>
+    <li>La tabla de errores y tasas aparece en la consola; las ventanas gráficas muestran $u_h$ en cada malla.</li>
+  </ol>
+  <p>
+    El laboratorio en línea usa FreeFEM v3.5; la versión de escritorio (v4.x) es más rápida, permite mallas mucho más
+    finas y problemas en 3D. El código de esta página funciona sin cambios en ambas.
+  </p>
+</section>
+</main>
+</div>
+
+<footer>
+  <div class="pie-in">
+    <p class="org">ORGANIZAN Y PATROCINAN</p>
+    <div class="logos">
+      <img src="logos/logo_ubb.png" alt="Universidad del Bío-Bío">
+      <img src="logos/logo_vrip.png" class="ancho" alt="Vicerrectoría de Investigación y Postgrado, UBB">
+      <img src="logos/logo_doctorado.png" alt="Doctorado en Matemática Aplicada">
+      <img src="logos/logo_magister.png" alt="Magíster en Matemática Aplicada">
+    </div>
+    <div class="pie-texto">
+      <span>Universidad del Bío-Bío</span>
+      <span>Escuela de Primavera en Matemática Aplicada · 2026</span>
+    </div>
+  </div>
+  <div class="banda-final"></div>
+</footer>
+
+<script>
+/* =====================================================================
+   Utilidades: código fuente, resaltado, copiar y descargar
+   ===================================================================== */
+const FUENTE = document.getElementById('fuente').textContent.replace(/^\n/, '');
+const editor = document.getElementById('editor');
+editor.value = FUENTE;
+
+const KW1 = new Set(['for','if','else','while','break','continue','return','solve','problem','varf','macro','func','include','load']);
+const KW2 = new Set(['int','real','bool','string','complex','mesh','mesh3','fespace','matrix']);
+const KW3 = new Set(['square','buildmesh','border','int2d','int1d','on','plot','cout','endl','sqrt','log','sin','cos','exp',
+                     'dx','dy','P0','P1','P2','hTriangle','sparsesolver','qforder','ndof','pi']);
+
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function resaltarLinea(linea) {
+  let out = '', i = 0;
+  while (i < linea.length) {
+    const resto = linea.slice(i);
+    let m;
+    if (resto.startsWith('//')) { out += '<span class="tk-c">' + esc(resto) + '</span>'; break; }
+    if ((m = resto.match(/^"(?:[^"\\]|\\.)*"/))) { out += '<span class="tk-s">' + esc(m[0]) + '</span>'; i += m[0].length; continue; }
+    if ((m = resto.match(/^\d+\.?\d*(?:[eE][+-]?\d+)?/))) { out += '<span class="tk-n">' + m[0] + '</span>'; i += m[0].length; continue; }
+    if ((m = resto.match(/^[A-Za-z_]\w*/))) {
+      const w = m[0];
+      const c = KW1.has(w) ? 'tk-k1' : KW2.has(w) ? 'tk-k2' : KW3.has(w) ? 'tk-k3' : '';
+      out += c ? '<span class="' + c + '">' + w + '</span>' : w;
+      i += w.length; continue;
+    }
+    out += esc(linea[i]); i++;
+  }
+  return out;
+}
+document.getElementById('codigo-resaltado').innerHTML =
+  FUENTE.replace(/\n$/, '').split('\n').map(l => '<span class="l">' + (resaltarLinea(l) || ' ') + '</span>').join('');
+
+function textoDe(origen) { return origen === 'editor' ? editor.value : FUENTE; }
+
+async function copiar(texto) {
+  try { await navigator.clipboard.writeText(texto); return true; }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = texto; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {}
+    ta.remove(); return ok;
+  }
+}
+function avisar(boton, msg) {
+  const span = boton.parentElement.querySelector('.estado-copia');
+  if (!span) return;
+  span.textContent = msg;
+  clearTimeout(span._t); span._t = setTimeout(() => { span.textContent = ''; }, 2200);
+}
+document.querySelectorAll('[data-copiar]').forEach(b => b.addEventListener('click', async () => {
+  avisar(b, (await copiar(textoDe(b.dataset.copiar))) ? '✓ Copiado' : 'No se pudo copiar');
+}));
+document.querySelectorAll('[data-descargar]').forEach(b => b.addEventListener('click', () => {
+  const blob = new Blob([textoDe(b.dataset.descargar)], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'poisson_P1.edp';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  avisar(b, '✓ Descargado');
+}));
+
+// Tabulación dentro del editor
+editor.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = editor.selectionStart, t = editor.selectionEnd;
+    editor.setRangeText('    ', s, t, 'end');
+  }
+});
+document.getElementById('btn-restaurar').addEventListener('click', () => { editor.value = FUENTE; });
+document.getElementById('btn-p2').addEventListener('click', () => {
+  editor.value = editor.value.replace('fespace Vh(Th, P1);', 'fespace Vh(Th, P2);')
+                             .replace('Elementos finitos de Lagrange P1', 'Elementos finitos de Lagrange P2');
+  editor.focus();
+});
+
+/* =====================================================================
+   Puente con FreeFEM JS: funciones que el motor compilado invoca
+   (adaptadas de custom-freefem-api.js de FreeFEM, licencia LGPL)
+   ===================================================================== */
+let salida = [];
+window.ffjs_add_stdout = t => { salida.push(String(t)); };
+window.ffjs_add_stderr = t => { salida.push(String(t)); };
+
+const lienzo = document.getElementById('ffjs-canvas');
+let ctx = null, escala = 1, punto = { x: 0, y: 0 }, cadena = '';
+window.ffjs_graphs = [''];
+window.ffjs_files_data = [];
+window.ffjs_listgraphs = c => {
+  const i = window.ffjs_graphs.length - 1;
+  if (c) window.ffjs_graphs[i] += String.fromCharCode(c); else window.ffjs_graphs.push('');
+};
+window.ffjs_graphstart = () => {
+  // Resolución interna fija (nítida en cualquier pantalla); el CSS la escala al ancho disponible
+  lienzo.width = 1000;
+  lienzo.height = Math.round(lienzo.width / Math.SQRT2);
+  escala = 10000 / lienzo.width;
+  ctx = lienzo.getContext('2d');
+  ctx.font = '17px Fira Sans, Arial, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+};
+window.ffjs_graphdone = () => {};
+window.ffjs_couleur = (r, g, b) => {
+  if (!ctx) return;
+  const c = 'rgb(' + Math.floor(r * 255) + ',' + Math.floor(g * 255) + ',' + Math.floor(b * 255) + ')';
+  ctx.strokeStyle = c; ctx.fillStyle = c;
+};
+window.ffjs_rmoveto = (x, y) => { if (ctx) punto = { x: x / escala, y: y / escala }; };
+window.ffjs_rlineto = (x, y) => {
+  if (!ctx) return;
+  ctx.beginPath(); ctx.moveTo(punto.x, punto.y); ctx.lineTo(x / escala, y / escala); ctx.stroke();
+  punto = { x: x / escala, y: y / escala };
+};
+window.ffjs_plotstring = c => {
+  if (!ctx) return;
+  if (c) cadena += String.fromCharCode(c);
+  else { ctx.fillText(cadena, punto.x, punto.y); cadena = ''; }
+};
+window.ffjs_penthickness = p => { if (ctx) ctx.lineWidth = p; };
+window.ffjs_fillpoly_begin = (x, y) => { if (!ctx) return; ctx.beginPath(); ctx.moveTo(x / escala, y / escala); };
+window.ffjs_fillpoly_next = (x, y) => { if (ctx) ctx.lineTo(x / escala, y / escala); };
+window.ffjs_fillpoly_close = () => { if (!ctx) return; ctx.fill(); ctx.closePath(); };
+
+/* Carga diferida del motor.
+   El motor compilado trae fija una memoria de 16 MB, insuficiente para P2 en mallas finas.
+   Si el archivo puede leerse como texto (copia local en vendor/ o servidor con CORS), se
+   amplía a 128 MB antes de ejecutarlo; si no, se carga tal cual desde freefem.org. */
+const FUENTES_MOTOR = ['vendor/freefem-js-compiled.js', 'https://freefem.org/js/freefem-js-compiled.js'];
+const MEMORIA_ORIGINAL = 'ob.TOTAL_MEMORY||16777216';
+const MEMORIA_AMPLIADA = 'ob.TOTAL_MEMORY||134217728';
+let motorListo = null, memoriaAmpliada = false;
+function cargarScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = () => (typeof window.ffjs_callcxx === 'function' ? res() : rej(new Error('sin ffjs_callcxx')));
+    s.onerror = () => { s.remove(); rej(new Error('no se pudo cargar ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+async function cargarParchado(src) {
+  const r = await fetch(src);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const codigo = (await r.text()).replace(MEMORIA_ORIGINAL, MEMORIA_AMPLIADA);
+  const url = URL.createObjectURL(new Blob([codigo], { type: 'text/javascript' }));
+  try { await cargarScript(url); } finally { URL.revokeObjectURL(url); }
+  memoriaAmpliada = true;
+}
+function cargarMotor() {
+  if (!motorListo) {
+    motorListo = (async () => {
+      for (const src of FUENTES_MOTOR) {
+        try { await cargarParchado(src); return; } catch (e) { /* probar la siguiente */ }
+      }
+      try { await cargarScript(FUENTES_MOTOR[FUENTES_MOTOR.length - 1]); return; } catch (e) { /* sin conexión */ }
+      motorListo = null;
+      throw new Error('No se pudo descargar FreeFEM JS. Revise su conexión a internet.');
+    })();
+  }
+  return motorListo;
+}
+
+const estado = document.getElementById('estado');
+const consola = document.getElementById('consola');
+const btnEjecutar = document.getElementById('btn-ejecutar');
+function ponerEstado(msg, tipo) { estado.textContent = msg; estado.className = 'estado' + (tipo ? ' ' + tipo : ''); }
+
+async function ejecutar() {
+  btnEjecutar.disabled = true;
+  try {
+    if (typeof window.ffjs_callcxx !== 'function') {
+      ponerEstado('Descargando el motor FreeFEM JS (≈ 17,7 MB)…');
+      await cargarMotor();
+    }
+    ponerEstado('Ejecutando FreeFEM…');
+    await new Promise(r => setTimeout(r, 40));    // deja que el navegador repinte
+    salida = [];
+    const t0 = performance.now();
+    let fallo = null;
+    try { window.ffjs_callcxx(editor.value); } catch (e) { fallo = e; }
+    const seg = ((performance.now() - t0) / 1000).toFixed(2);
+    const texto = salida.join('\n');
+    consola.textContent = texto || '(sin salida)';
+    consola.scrollTop = consola.scrollHeight;
+    const filas = extraerTabla(texto);
+    mostrarResultados(filas);
+    if (/Cannot enlarge memory arrays/.test(texto)) {
+      ponerEstado('FreeFEM JS se quedó sin memoria' + (memoriaAmpliada ? '' : ' (16 MB)') +
+                  ': reduzca nref o el orden del elemento.', 'err');
+    } else if (fallo || !/Normal End/.test(texto)) {
+      ponerEstado('FreeFEM terminó con errores: revise la consola.' + (fallo ? ' (' + String(fallo.message || fallo).slice(0, 120) + ')' : ''), 'err');
+    } else {
+      ponerEstado('Ejecución completada en ' + seg + ' s.', 'ok');
+    }
+  } catch (e) {
+    ponerEstado(e.message, 'err');
+  } finally {
+    btnEjecutar.disabled = false;
+  }
+}
+btnEjecutar.addEventListener('click', ejecutar);
+
+/* Filas con 6 números: h, ndof, errL2, tasaL2, errH1, tasaH1 */
+function extraerTabla(texto) {
+  const filas = [];
+  for (const l of texto.split('\n')) {
+    const p = l.trim().split(/\s+/);
+    if (p.length === 6 && p.every(v => /^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(v))) filas.push(p.map(Number));
+  }
+  return filas;
+}
+
+function fmt(v, d) { return Math.abs(v) < 1e-3 ? v.toExponential(d - 1) : v.toPrecision(d); }
+
+function mostrarResultados(filas) {
+  const cont = document.getElementById('resultados');
+  if (!filas.length) { cont.innerHTML = '<div class="vacio">No se encontró la tabla de errores en la salida.</div>'; return; }
+  let html = '<div class="tabla-wrap" style="margin:0"><table class="t num"><thead><tr>' +
+    '<th>h</th><th>ndof</th><th>error L²</th><th>tasa</th><th>error H¹</th><th>tasa</th></tr></thead><tbody>';
+  filas.forEach((f, i) => {
+    html += '<tr><td>' + fmt(f[0], 4) + '</td><td>' + f[1] + '</td><td>' + fmt(f[2], 4) + '</td><td>' +
+      (i ? f[3].toFixed(3) : '—') + '</td><td>' + fmt(f[4], 4) + '</td><td>' + (i ? f[5].toFixed(3) : '—') + '</td></tr>';
+  });
+  html += '</tbody></table></div><div>' + graficoLogLog(filas) +
+    '<div class="leyenda"><span><i style="background:#1B3A57"></i>error L²</span>' +
+    '<span><i style="background:#3D7AA8"></i>error H¹</span>' +
+    '<span><i style="background:repeating-linear-gradient(90deg,#9aa4ae 0 4px,transparent 4px 7px)"></i>pendientes de referencia</span></div></div>';
+  cont.innerHTML = html;
+}
+
+function graficoLogLog(filas) {
+  const W = 520, H = 300, m = { l: 62, r: 16, t: 14, b: 40 };
+  const hs = filas.map(f => f[0]), es = filas.flatMap(f => [f[2], f[4]]).filter(v => v > 0);
+  const lx0 = Math.floor(Math.log10(Math.min(...hs)) * 2) / 2, lx1 = Math.ceil(Math.log10(Math.max(...hs)) * 2) / 2;
+  const ly0 = Math.floor(Math.log10(Math.min(...es))), ly1 = Math.ceil(Math.log10(Math.max(...es)));
+  const X = v => m.l + (Math.log10(v) - lx0) / (lx1 - lx0) * (W - m.l - m.r);
+  const Y = v => H - m.b - (Math.log10(v) - ly0) / (ly1 - ly0) * (H - m.t - m.b);
+  let s = '<svg class="grafico" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Gráfico log-log de errores versus h">';
+  for (let k = ly0; k <= ly1; k++) {
+    const y = Y(Math.pow(10, k));
+    s += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y + '" y2="' + y + '" stroke="#e3e8ed"/>' +
+         '<text x="' + (m.l - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="12" font-family="Fira Sans" fill="#5E6A75">10<tspan dy="-6" font-size="9">' + k + '</tspan></text>';
+  }
+  hs.forEach(h => {
+    const x = X(h);
+    s += '<line x1="' + x + '" x2="' + x + '" y1="' + m.t + '" y2="' + (H - m.b) + '" stroke="#f0f3f6"/>' +
+         '<text x="' + x + '" y="' + (H - m.b + 16) + '" text-anchor="middle" font-size="11" font-family="Fira Sans" fill="#5E6A75">' + fmt(h, 3) + '</text>';
+  });
+  s += '<rect x="' + m.l + '" y="' + m.t + '" width="' + (W - m.l - m.r) + '" height="' + (H - m.t - m.b) + '" fill="none" stroke="#50677D"/>';
+  s += '<text x="' + ((W + m.l) / 2) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="13" font-family="KaTeX_Math, serif" font-style="italic">h</text>';
+  // pendientes de referencia ancladas al último punto
+  const ult = filas[filas.length - 1], pri = filas[0];
+  const ref = (p, e, dy) => {
+    const y0 = e * Math.pow(pri[0] / ult[0], p) * dy, y1 = e * dy;
+    return '<line x1="' + X(pri[0]) + '" y1="' + Y(y0) + '" x2="' + X(ult[0]) + '" y2="' + Y(y1) + '" stroke="#9aa4ae" stroke-dasharray="5 4"/>' +
+           '<text x="' + (X(pri[0]) + 6) + '" y="' + (Y(y0) - 6) + '" font-size="11" font-family="Fira Sans" fill="#5E6A75">O(h' + (p === 1 ? '' : '<tspan dy="-5" font-size="8">' + p + '</tspan><tspan dy="5">') + ')' + (p === 1 ? '' : '</tspan>') + '</text>';
+  };
+  const pH1 = Math.max(1, Math.round(ult[5] || 1)), pL2 = Math.max(2, Math.round(ult[3] || 2));
+  s += ref(pL2, ult[2], 0.45) + ref(pH1, ult[4], 1.8);
+  const serie = (idx, color) => {
+    const pts = filas.map(f => X(f[0]).toFixed(1) + ',' + Y(f[idx]).toFixed(1)).join(' ');
+    return '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.2"/>' +
+      filas.map(f => '<circle cx="' + X(f[0]) + '" cy="' + Y(f[idx]) + '" r="3.6" fill="#fff" stroke="' + color + '" stroke-width="2"/>').join('');
+  };
+  s += serie(4, '#3D7AA8') + serie(2, '#1B3A57') + '</svg>';
+  return s;
+}
+
+/* =====================================================================
+   Matemáticas (KaTeX), índice activo y ejecución automática opcional
+   ===================================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }],
+      throwOnError: false
+    });
+  }
+  const enlaces = [...document.querySelectorAll('.indice a')];
+  const obs = new IntersectionObserver(entradas => {
+    entradas.forEach(en => {
+      if (en.isIntersecting) {
+        enlaces.forEach(a => a.classList.toggle('activo', a.getAttribute('href') === '#' + en.target.id));
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  enlaces.forEach(a => { const s = document.querySelector(a.getAttribute('href')); if (s) obs.observe(s); });
+  if (location.hash === '#autorun') ejecutar();
+});
+</script>
+</body>
+</html>
