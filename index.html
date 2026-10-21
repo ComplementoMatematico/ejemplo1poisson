@@ -7,7 +7,7 @@
 <meta name="description" content="Material complementario del cursillo de Análisis Numérico de EDP (EPRIMA 2026, UBB): teoría del método de elementos finitos para el problema de Poisson y laboratorio FreeFEM.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&family=Montserrat:ital,wght@1,900&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/computer-modern@0.1.2/cmu-serif.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -18,6 +18,7 @@
      ------------------------------------------------------------------ */
   :root {
     --navy: #1B3A57;
+    --amarillo: #EAD900;   /* amarillo del logo EPRIMA */
     --acero: #3D7AA8;
     --pizarra: #50677D;
     --gristexto: #5E6A75;
@@ -33,6 +34,7 @@
     color-scheme: light;
   }
   * { box-sizing: border-box; }
+  html, body { overflow-x: clip; }   /* nada desborda el ancho de la pantalla en moviles */
   html { scroll-behavior: smooth; scroll-padding-top: 72px; }
   body {
     margin: 0;
@@ -68,7 +70,45 @@
   }
 
   /* Portada */
-  .hero-banner { display: block; width: 100%; height: auto; background: var(--navy); }
+  /* Banner del evento hecho en HTML/CSS: texto y fórmulas vectoriales, nítido en cualquier resolución */
+  .hero-banner {
+    position: relative; overflow: hidden; text-align: center; color: #fff; user-select: none;
+    background-color: var(--navy);
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+    padding: clamp(20px, 3.4vw, 50px) 16px clamp(18px, 2.8vw, 42px);
+  }
+  .hb-formulas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .hb-formulas text { fill: rgba(255,255,255,.085); font-family: "CMU Serif", Georgia, serif; font-style: italic; }
+  .hb-formulas line { stroke: rgba(255,255,255,.085); stroke-width: 2; }
+  .hb-contenido { position: relative; line-height: 1; }
+  .hb-l1, .hb-l2 { font-family: "Montserrat", var(--sans); font-weight: 900; font-style: italic; letter-spacing: -.012em; }
+  .hb-l1 {
+    color: var(--amarillo); font-size: clamp(22px, 4.9vw, 80px);
+    display: flex; justify-content: center; align-items: center; gap: .28em; margin-bottom: .14em;
+  }
+  .hb-pill { background: var(--amarillo); color: var(--navy); border-radius: .24em; padding: .04em .18em .06em; }
+  .hb-l2 { font-size: clamp(18px, 5.1vw, 84px); line-height: 1.02; }
+  .hb-l3 {
+    font-family: "Barlow Condensed", var(--sans); font-weight: 600; color: var(--amarillo);
+    font-size: clamp(18px, 4.6vw, 74px); line-height: 1.05; margin-top: .05em;
+  }
+
+  /* Botón de pantalla completa (en la banda superior) */
+  .banda-in { justify-content: flex-start; }
+  .banda-in nav { margin-left: auto; }
+  .btn-pantalla {
+    margin-left: 20px; min-height: 32px; width: 36px; padding: 0; justify-content: center;
+    background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 2px;
+  }
+  .btn-pantalla:hover { background: rgba(255,255,255,.12); }
+  .btn-pantalla[hidden] { display: none; }
+  .btn-pantalla svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  .btn-pantalla .ico-cerrar, html.en-pantalla .btn-pantalla .ico-abrir { display: none; }
+  html.en-pantalla .btn-pantalla .ico-cerrar { display: block; }
+  @media (max-width: 560px) { .btn-pantalla { margin-left: auto; } }
   .hero { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
   .cinta {
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 20px;
@@ -271,6 +311,10 @@
       <a href="#codigo">CÓDIGO</a>
       <a href="#laboratorio">LABORATORIO</a>
     </nav>
+    <button type="button" class="btn-pantalla" id="btn-pantalla" aria-label="Ver en pantalla completa" title="Pantalla completa">
+      <svg class="ico-abrir" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      <svg class="ico-cerrar" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+    </button>
   </div>
 </header>
 
@@ -278,8 +322,27 @@
      PORTADA
      ================================================================ -->
 <section id="inicio">
-  <img class="hero-banner" src="logos/banner_eprima.png"
-       alt="E'(UBB) = 2026 · Escuela de Primavera en Matemática Aplicada · Novena versión">
+  <div class="hero-banner" role="img" aria-label="E′(UBB) = 2026 · Escuela de Primavera en Matemática Aplicada · Novena versión">
+    <svg class="hb-formulas" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <text x="70" y="78" font-size="46">dz</text><line x1="62" y1="96" x2="128" y2="96"/><text x="72" y="140" font-size="46">dt</text>
+      <text x="150" y="122" font-size="46">= xy − βz</text>
+      <text x="36" y="255" font-size="64">)</text><text x="86" y="250" font-size="34">·</text>
+      <text x="420" y="88" font-size="38">ρ</text><text x="470" y="60" font-size="30">u²</text>
+      <text x="80" y="372" font-size="50">xᵢ − xⱼ</text><line x1="40" y1="392" x2="360" y2="392"/>
+      <text x="470" y="352" font-size="34">σ²</text><text x="560" y="300" font-size="30">∂u/∂t</text>
+      <text x="1040" y="70" font-size="34">∇·(K∇u)</text><text x="1250" y="120" font-size="40">S</text>
+      <text x="1330" y="230" font-size="40">cos(θ)</text><text x="1500" y="200" font-size="44">)</text>
+      <text x="1180" y="340" font-size="40">θ̇</text>
+      <text x="1330" y="372" font-size="46">− sin(θ)</text><line x1="1280" y1="320" x2="1580" y2="306"/>
+      <text x="1450" y="70" font-size="40">∫ f v</text><text x="960" y="390" font-size="30">λₖ</text>
+    </svg>
+    <div class="hb-contenido" aria-hidden="true">
+      <div class="hb-l1"><span>E’ (UBB) =</span><span class="hb-pill">2026</span></div>
+      <div class="hb-l2">ESCUELA DE PRIMAVERA</div>
+      <div class="hb-l2">EN MATEMÁTICA APLICADA</div>
+      <div class="hb-l3">NOVENA VERSIÓN</div>
+    </div>
+  </div>
   <div class="hero">
     <div class="cinta">
       <span>EPRIMA 2026 · NOVENA VERSIÓN</span>
@@ -858,19 +921,25 @@
   </p>
   <div class="tabla-wrap">
     <table class="t num">
-      <thead><tr><th>$n$</th><th>$h$</th><th>ndof</th><th>$\|u-u_h\|_{0,\Omega}$</th><th>tasa</th><th>$|u-u_h|_{1,\Omega}$</th><th>tasa</th></tr></thead>
+      <thead><tr><th>$n$</th><th>$h$</th><th>ndof</th><th>$\|u-u_h\|_{0,\Omega}$</th><th>tasa</th><th>$|u-u_h|_{1,\Omega}$</th><th>tasa</th><th>$\|u-u_h\|_{1,\Omega}$</th><th>tasa</th></tr></thead>
       <tbody>
-        <tr><td>4</td><td>0.353553</td><td>25</td><td>7.90906e-2</td><td>—</td><td>0.838544</td><td>—</td></tr>
-        <tr><td>8</td><td>0.176777</td><td>81</td><td>2.11337e-2</td><td>1.904</td><td>0.431798</td><td>0.958</td></tr>
-        <tr><td>16</td><td>0.0883883</td><td>289</td><td>5.37749e-3</td><td>1.975</td><td>0.217536</td><td>0.989</td></tr>
-        <tr><td>32</td><td>0.0441942</td><td>1089</td><td>1.35044e-3</td><td>1.994</td><td>0.108975</td><td>0.997</td></tr>
-        <tr><td>64</td><td>0.0220971</td><td>4225</td><td>3.37993e-4</td><td>1.998</td><td>0.0545137</td><td>0.999</td></tr>
+        <tr><td>4</td><td>0.353553</td><td>25</td><td>7.90906e-2</td><td>—</td><td>0.838544</td><td>—</td><td>0.842266</td><td>—</td></tr>
+        <tr><td>8</td><td>0.176777</td><td>81</td><td>2.11337e-2</td><td>1.904</td><td>0.431798</td><td>0.958</td><td>0.432315</td><td>0.962</td></tr>
+        <tr><td>16</td><td>0.0883883</td><td>289</td><td>5.37749e-3</td><td>1.975</td><td>0.217536</td><td>0.989</td><td>0.217602</td><td>0.990</td></tr>
+        <tr><td>32</td><td>0.0441942</td><td>1089</td><td>1.35044e-3</td><td>1.994</td><td>0.108975</td><td>0.997</td><td>0.108983</td><td>0.998</td></tr>
+        <tr><td>64</td><td>0.0220971</td><td>4225</td><td>3.37993e-4</td><td>1.998</td><td>0.0545137</td><td>0.999</td><td>0.0545147</td><td>0.999</td></tr>
       </tbody>
     </table>
   </div>
   <p>
     Las tasas tienden a $2$ en $L^2$ y a $1$ en $H^1$, en acuerdo con el Corolario 3 y el Teorema 6. (FreeFEM cuenta
     en <code class="in">ndof</code> también los nodos de frontera; las incógnitas libres son $(n-1)^2$.)
+  </p>
+  <p>
+    El <strong>error total</strong> es la norma $H^1$ completa,
+    $\|u-u_h\|_{1,\Omega}=\big(\|u-u_h\|_{0,\Omega}^2+|u-u_h|_{1,\Omega}^2\big)^{1/2}$, que es la que acota el lema de Céa.
+    Como $\|u-u_h\|_{0,\Omega}=\mathcal O(h^2)$ es mucho menor que $|u-u_h|_{1,\Omega}=\mathcal O(h)$, el error total queda
+    dominado por la parte $H^1$ y converge con tasa $1$.
   </p>
 </section>
 
@@ -900,7 +969,8 @@
 </section>
 
 <!-- Fuente única del programa: se copia, descarga, resalta y ejecuta desde aquí -->
-<script type="text/plain" id="fuente">// =============================================================
+<script type="text/plain" id="fuente">
+// =============================================================
 //  EPRIMA 2026 - Cursillo de Analisis Numerico de EDP
 //  Problema de Poisson:  -Lap(u) = f  en  Omega = (0,1)^2
 //                            u = 0  en  la frontera de Omega
@@ -951,17 +1021,45 @@ for (int i = 0; i < nref; i++) {
     n *= 2;                              // refinamiento uniforme
 }
 
-// ---------- 4. Tasas de convergencia experimentales ----------
-cout << "h \t ndof \t errL2 \t tasaL2 \t errH1 \t tasaH1" << endl;
+// ---------- 4. Errores y tasas de convergencia experimentales ----------
+// Error total: norma H1 completa  ||e||_1 = sqrt( ||e||_0^2 + |e|_1^2 )
+func string celda(string s, int w) {     // alinea s a la derecha en w caracteres
+    string r = s;
+    while (r.length < w) r = " " + r;
+    return r;
+}
+func int columna(real e, real r, bool primera) {   // escribe "error  tasa"
+    cout.scientific; cout.precision(4);
+    cout << "  " << e;
+    if (primera) cout << celda("--", 7);
+    else { cout.fixed; cout.precision(3); cout << "  " << r; }
+    return 0;
+}
+string raya = "";
+for (int j = 0; j < 77; j++) raya = raya + "-";
+
+cout << endl << raya << endl;
+cout << celda("h", 12) << celda("ndof", 8)
+     << celda("err L2", 12) << celda("tasa", 7)
+     << celda("err H1", 12) << celda("tasa", 7)
+     << celda("err total", 12) << celda("tasa", 7) << endl << raya << endl;
 for (int i = 0; i < nref; i++) {
-    real rL2 = 0., rH1 = 0.;
+    real eT = sqrt(errL2[i]^2 + errH1[i]^2);
+    real rL2 = 0., rH1 = 0., rT = 0.;
     if (i > 0) {
-        rL2 = log(errL2[i-1]/errL2[i]) / log(hmax[i-1]/hmax[i]);
-        rH1 = log(errH1[i-1]/errH1[i]) / log(hmax[i-1]/hmax[i]);
+        real eTa = sqrt(errL2[i-1]^2 + errH1[i-1]^2);
+        real lh = log(hmax[i-1]/hmax[i]);
+        rL2 = log(errL2[i-1]/errL2[i]) / lh;
+        rH1 = log(errH1[i-1]/errH1[i]) / lh;
+        rT  = log(eTa/eT) / lh;
     }
-    cout << hmax[i] << " \t " << ndof[i]  << " \t "
-         << errL2[i] << " \t " << rL2     << " \t "
-         << errH1[i] << " \t " << rH1     << endl;
+    string sn = ndof[i];
+    cout.scientific; cout.precision(4);
+    cout << "  " << hmax[i] << celda(sn, 8);
+    columna(errL2[i], rL2, i == 0);
+    columna(errH1[i], rH1, i == 0);
+    columna(eT, rT, i == 0);
+    cout << endl;
 }
 </script>
 
@@ -988,7 +1086,8 @@ for (int i = 0; i < nref; i++) {
         <tr><td class="izq">$h=\max_K h_K$</td><td>37–38</td><td class="izq"><code class="in">Ph hK = hTriangle; hK[].max</code></td><td class="izq"><code class="in">hK[]</code> es el vector de grados de libertad.</td></tr>
         <tr><td class="izq">$\|u-u_h\|_{0,\Omega}$, $|u-u_h|_{1,\Omega}$</td><td>42–44</td><td class="izq"><code class="in">sqrt(int2d(Th, qforder=5)(...))</code></td><td class="izq">Cuadratura de orden 5 para no contaminar el error.</td></tr>
         <tr><td class="izq">Refinamiento uniforme $h\mapsto h/2$</td><td>49</td><td class="izq"><code class="in">n *= 2</code></td><td class="izq"></td></tr>
-        <tr><td class="izq">Tasas $r_i$</td><td>57–58</td><td class="izq"><code class="in">log(errL2[i-1]/errL2[i]) / log(...)</code></td><td class="izq">Sección 10.</td></tr>
+        <tr><td class="izq">Error total $\|u-u_h\|_{1,\Omega}=\big(\|e\|_{0,\Omega}^2+|e|_{1,\Omega}^2\big)^{1/2}$</td><td>75</td><td class="izq"><code class="in">sqrt(errL2[i]^2 + errH1[i]^2)</code></td><td class="izq">Norma $H^1$ completa.</td></tr>
+        <tr><td class="izq">Tasas $r_i$</td><td>79–82</td><td class="izq"><code class="in">log(errL2[i-1]/errL2[i]) / lh</code></td><td class="izq">Sección 10.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1021,7 +1120,8 @@ for (int i = 0; i < nref; i++) {
     Este laboratorio ejecuta <strong>FreeFEM JS</strong> (FreeFEM v3.5 compilado a JavaScript por Antoine Le Hyaric)
     directamente en su navegador: no hay servidor ni instalación. Edite el código, pulse <em>Ejecutar</em> y se
     mostrarán el gráfico de $u_h$, la tabla de errores y tasas y su gráfico log–log. La primera ejecución descarga
-    el motor (≈ 17,7 MB); las siguientes son inmediatas.
+    el motor (≈ 17,7 MB); las siguientes son inmediatas. FreeFEM calcula en un proceso aparte, así que la página
+    sigue respondiendo y el cálculo puede detenerse en cualquier momento con <em>■ Detener</em> o recargando (F5).
   </p>
 
   <div class="barra">
@@ -1196,138 +1296,198 @@ document.getElementById('btn-p2').addEventListener('click', () => {
 });
 
 /* =====================================================================
-   Puente con FreeFEM JS: funciones que el motor compilado invoca
-   (adaptadas de custom-freefem-api.js de FreeFEM, licencia LGPL)
+   FreeFEM JS se ejecuta dentro de un iframe aislado (sandbox sin
+   allow-same-origin). El navegador lo corre en otro proceso, así que la
+   página sigue respondiendo mientras calcula: se puede detener el cálculo
+   (se elimina el iframe) o recargar con F5. Un Web Worker no sirve porque
+   el motor compilado excede la pila de los Workers.
+   Cada plot() se graba en el iframe como una lista de operaciones de dibujo
+   (funciones adaptadas de custom-freefem-api.js de FreeFEM, licencia LGPL)
+   y la página dibuja el último en su lienzo.
    ===================================================================== */
-let salida = [];
-window.ffjs_add_stdout = t => { salida.push(String(t)); };
-window.ffjs_add_stderr = t => { salida.push(String(t)); };
+const PUENTE = `<!DOCTYPE html><html><head><meta charset="utf-8"><script>
+var ESCALA = 10, actual = null, cadena = '';
+function enviar(m) { parent.postMessage(m, '*'); }
+function cerrarCuadro() { if (actual && actual.length) enviar({ tipo: 'cuadro', ops: actual }); actual = null; }
+self.ffjs_add_stdout = function (t) { enviar({ tipo: 'linea', texto: String(t) }); };
+self.ffjs_add_stderr = function (t) { enviar({ tipo: 'linea', texto: String(t) }); };
+self.ffjs_graphs = [''];
+self.ffjs_files_data = [];
+self.ffjs_listgraphs = function () {};
+self.ffjs_graphstart = function () { cerrarCuadro(); actual = []; };
+self.ffjs_graphdone = function () { cerrarCuadro(); };
+self.ffjs_couleur = function (r, g, b) { if (actual) actual.push(['c', 'rgb(' + Math.floor(r * 255) + ',' + Math.floor(g * 255) + ',' + Math.floor(b * 255) + ')']); };
+self.ffjs_rmoveto = function (x, y) { if (actual) actual.push(['m', x / ESCALA, y / ESCALA]); };
+self.ffjs_rlineto = function (x, y) { if (actual) actual.push(['l', x / ESCALA, y / ESCALA]); };
+self.ffjs_plotstring = function (c) {
+  if (!actual) return;
+  if (c) cadena += String.fromCharCode(c); else { actual.push(['s', cadena]); cadena = ''; }
+};
+self.ffjs_penthickness = function (p) { if (actual) actual.push(['w', p]); };
+self.ffjs_fillpoly_begin = function (x, y) { if (actual) actual.push(['pb', x / ESCALA, y / ESCALA]); };
+self.ffjs_fillpoly_next = function (x, y) { if (actual) actual.push(['pn', x / ESCALA, y / ESCALA]); };
+self.ffjs_fillpoly_close = function () { if (actual) actual.push(['pc']); };
+function cargar(src) {
+  var s = document.createElement('script');
+  s.src = src;
+  s.onload = function () { enviar({ tipo: 'listo', ok: typeof ffjs_callcxx === 'function' }); };
+  s.onerror = function () { enviar({ tipo: 'listo', ok: false }); };
+  document.head.appendChild(s);
+}
+onmessage = function (e) {
+  var d = e.data || {};
+  if (d.tipo === 'motor') cargar(URL.createObjectURL(new Blob([d.codigo], { type: 'text/javascript' })));
+  else if (d.tipo === 'motorURL') cargar(d.url);
+  else if (d.tipo === 'ejecutar') {
+    var err = null, t0 = Date.now();
+    try { ffjs_callcxx(d.codigo); } catch (x) { err = String((x && x.message) || x).slice(0, 200); }
+    cerrarCuadro();
+    enviar({ tipo: 'fin', err: err, seg: (Date.now() - t0) / 1000 });
+  }
+};
+<\/script></head><body></body></html>`;
 
 const lienzo = document.getElementById('ffjs-canvas');
-let ctx = null, escala = 1, punto = { x: 0, y: 0 }, cadena = '';
-window.ffjs_graphs = [''];
-window.ffjs_files_data = [];
-window.ffjs_listgraphs = c => {
-  const i = window.ffjs_graphs.length - 1;
-  if (c) window.ffjs_graphs[i] += String.fromCharCode(c); else window.ffjs_graphs.push('');
-};
-window.ffjs_graphstart = () => {
-  // Resolución interna fija (nítida en cualquier pantalla); el CSS la escala al ancho disponible
-  lienzo.width = 1000;
-  lienzo.height = Math.round(lienzo.width / Math.SQRT2);
-  escala = 10000 / lienzo.width;
-  ctx = lienzo.getContext('2d');
-  ctx.font = '17px Fira Sans, Arial, sans-serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, lienzo.width, lienzo.height);
-};
-window.ffjs_graphdone = () => {};
-window.ffjs_couleur = (r, g, b) => {
-  if (!ctx) return;
-  const c = 'rgb(' + Math.floor(r * 255) + ',' + Math.floor(g * 255) + ',' + Math.floor(b * 255) + ')';
-  ctx.strokeStyle = c; ctx.fillStyle = c;
-};
-window.ffjs_rmoveto = (x, y) => { if (ctx) punto = { x: x / escala, y: y / escala }; };
-window.ffjs_rlineto = (x, y) => {
-  if (!ctx) return;
-  ctx.beginPath(); ctx.moveTo(punto.x, punto.y); ctx.lineTo(x / escala, y / escala); ctx.stroke();
-  punto = { x: x / escala, y: y / escala };
-};
-window.ffjs_plotstring = c => {
-  if (!ctx) return;
-  if (c) cadena += String.fromCharCode(c);
-  else { ctx.fillText(cadena, punto.x, punto.y); cadena = ''; }
-};
-window.ffjs_penthickness = p => { if (ctx) ctx.lineWidth = p; };
-window.ffjs_fillpoly_begin = (x, y) => { if (!ctx) return; ctx.beginPath(); ctx.moveTo(x / escala, y / escala); };
-window.ffjs_fillpoly_next = (x, y) => { if (ctx) ctx.lineTo(x / escala, y / escala); };
-window.ffjs_fillpoly_close = () => { if (!ctx) return; ctx.fill(); ctx.closePath(); };
+lienzo.width = 1000; lienzo.height = Math.round(1000 / Math.SQRT2);
+const ctx = lienzo.getContext('2d');
+let salida = [], cuadros = [];
 
-/* Carga diferida del motor.
-   El motor compilado trae fija una memoria de 16 MB, insuficiente para P2 en mallas finas.
-   Si el archivo puede leerse como texto (copia local en vendor/ o servidor con CORS), se
-   amplía a 128 MB antes de ejecutarlo; si no, se carga tal cual desde freefem.org. */
+function dibujarCuadro(ops) {
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+  ctx.font = '17px Fira Sans, Arial, sans-serif'; ctx.lineWidth = 1;
+  let px = 0, py = 0;
+  for (const op of ops) {
+    switch (op[0]) {
+      case 'c': ctx.strokeStyle = op[1]; ctx.fillStyle = op[1]; break;
+      case 'm': px = op[1]; py = op[2]; break;
+      case 'l': ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(op[1], op[2]); ctx.stroke(); px = op[1]; py = op[2]; break;
+      case 's': ctx.fillText(op[1], px, py); break;
+      case 'w': ctx.lineWidth = op[1]; break;
+      case 'pb': ctx.beginPath(); ctx.moveTo(op[1], op[2]); break;
+      case 'pn': ctx.lineTo(op[1], op[2]); break;
+      case 'pc': ctx.fill(); break;
+    }
+  }
+}
+function dibujarUltimo() { if (cuadros.length) dibujarCuadro(cuadros[cuadros.length - 1]); }
+
+/* Motor: se descarga una vez en la página y se entrega al iframe. El motor compilado
+   trae fija una memoria de 16 MB, insuficiente para P2 en mallas finas: si el archivo
+   puede leerse como texto (copia local en vendor/ o servidor con CORS) se amplía a
+   128 MB; si no, el iframe lo carga tal cual desde freefem.org. */
 const FUENTES_MOTOR = ['vendor/freefem-js-compiled.js', 'https://freefem.org/js/freefem-js-compiled.js'];
 const MEMORIA_ORIGINAL = 'ob.TOTAL_MEMORY||16777216';
 const MEMORIA_AMPLIADA = 'ob.TOTAL_MEMORY||134217728';
-let motorListo = null, memoriaAmpliada = false;
-function cargarScript(src) {
-  return new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = src; s.async = true;
-    s.onload = () => (typeof window.ffjs_callcxx === 'function' ? res() : rej(new Error('sin ffjs_callcxx')));
-    s.onerror = () => { s.remove(); rej(new Error('no se pudo cargar ' + src)); };
-    document.head.appendChild(s);
-  });
-}
-async function cargarParchado(src) {
-  const r = await fetch(src);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const codigo = (await r.text()).replace(MEMORIA_ORIGINAL, MEMORIA_AMPLIADA);
-  const url = URL.createObjectURL(new Blob([codigo], { type: 'text/javascript' }));
-  try { await cargarScript(url); } finally { URL.revokeObjectURL(url); }
-  memoriaAmpliada = true;
-}
-function cargarMotor() {
-  if (!motorListo) {
-    motorListo = (async () => {
-      for (const src of FUENTES_MOTOR) {
-        try { await cargarParchado(src); return; } catch (e) { /* probar la siguiente */ }
-      }
-      try { await cargarScript(FUENTES_MOTOR[FUENTES_MOTOR.length - 1]); return; } catch (e) { /* sin conexión */ }
-      motorListo = null;
-      throw new Error('No se pudo descargar FreeFEM JS. Revise su conexión a internet.');
-    })();
+let motorTexto = null, memoriaAmpliada = false;
+async function obtenerMotor() {
+  if (motorTexto !== null) return;
+  for (const src of FUENTES_MOTOR) {
+    try {
+      const r = await fetch(src);
+      if (!r.ok) continue;
+      motorTexto = (await r.text()).replace(MEMORIA_ORIGINAL, MEMORIA_AMPLIADA);
+      memoriaAmpliada = true;
+      return;
+    } catch (e) { /* probar la siguiente */ }
   }
-  return motorListo;
+  motorTexto = '';                     // vacío: el iframe usará la URL de freefem.org
 }
+
+let marco = null, alListo = null;
+function crearMarco() {
+  marco = document.createElement('iframe');
+  marco.setAttribute('sandbox', 'allow-scripts');
+  marco.setAttribute('aria-hidden', 'true');
+  marco.title = 'Motor FreeFEM JS';
+  // visible pero diminuto: un iframe con display:none recibe menos prioridad y calcula más lento
+  Object.assign(marco.style, { position: 'fixed', right: '0', bottom: '0', width: '1px', height: '1px',
+                               border: '0', opacity: '0.01', pointerEvents: 'none' });
+  marco.srcdoc = PUENTE;
+  const listo = new Promise((res, rej) => {
+    alListo = ok => (ok ? res() : rej(new Error('No se pudo cargar FreeFEM JS. Revise su conexión a internet.')));
+    marco.onload = () => marco.contentWindow.postMessage(
+      motorTexto ? { tipo: 'motor', codigo: motorTexto } : { tipo: 'motorURL', url: FUENTES_MOTOR[FUENTES_MOTOR.length - 1] }, '*');
+  });
+  document.body.appendChild(marco);
+  return listo;
+}
+function destruirMarco() { if (marco) marco.remove(); marco = null; alListo = null; }
 
 const estado = document.getElementById('estado');
 const consola = document.getElementById('consola');
 const btnEjecutar = document.getElementById('btn-ejecutar');
 function ponerEstado(msg, tipo) { estado.textContent = msg; estado.className = 'estado' + (tipo ? ' ' + tipo : ''); }
 
-async function ejecutar() {
-  btnEjecutar.disabled = true;
-  try {
-    if (typeof window.ffjs_callcxx !== 'function') {
-      ponerEstado('Descargando el motor FreeFEM JS (≈ 17,7 MB)…');
-      await cargarMotor();
-    }
-    ponerEstado('Ejecutando FreeFEM…');
-    await new Promise(r => setTimeout(r, 40));    // deja que el navegador repinte
-    salida = [];
-    const t0 = performance.now();
-    let fallo = null;
-    try { window.ffjs_callcxx(editor.value); } catch (e) { fallo = e; }
-    const seg = ((performance.now() - t0) / 1000).toFixed(2);
-    const texto = salida.join('\n');
-    consola.textContent = texto || '(sin salida)';
+/* Mensajes del iframe */
+let ejecutando = false;
+addEventListener('message', e => {
+  if (!marco || e.source !== marco.contentWindow) return;
+  const d = e.data || {};
+  if (d.tipo === 'listo') { if (alListo) alListo(d.ok); }
+  else if (d.tipo === 'linea') {
+    salida.push(d.texto);
+    consola.textContent += d.texto + '\n';
     consola.scrollTop = consola.scrollHeight;
-    const filas = extraerTabla(texto);
-    mostrarResultados(filas);
-    if (/Cannot enlarge memory arrays/.test(texto)) {
-      ponerEstado('FreeFEM JS se quedó sin memoria' + (memoriaAmpliada ? '' : ' (16 MB)') +
-                  ': reduzca nref o el orden del elemento.', 'err');
-    } else if (fallo || !/Normal End/.test(texto)) {
-      ponerEstado('FreeFEM terminó con errores: revise la consola.' + (fallo ? ' (' + String(fallo.message || fallo).slice(0, 120) + ')' : ''), 'err');
-    } else {
-      ponerEstado('Ejecución completada en ' + seg + ' s.', 'ok');
-    }
+  } else if (d.tipo === 'cuadro') cuadros.push(d.ops);   // el navegador los entrega al terminar el cálculo
+  else if (d.tipo === 'fin') finalizar(d.err, d.seg);
+});
+
+function modoBoton(calculando) {
+  ejecutando = calculando;
+  btnEjecutar.textContent = calculando ? '■ Detener' : '▶ Ejecutar';
+  btnEjecutar.setAttribute('aria-label', calculando ? 'Detener la ejecución' : 'Ejecutar el código');
+}
+
+async function ejecutar() {
+  if (ejecutando) { detenerEjecucion(); return; }
+  modoBoton(true);
+  salida = []; cuadros = [];
+  consola.textContent = '';
+  try {
+    if (motorTexto === null) { ponerEstado('Descargando el motor FreeFEM JS (≈ 17,7 MB)…'); await obtenerMotor(); }
+    if (!ejecutando) return;
+    if (!marco) { ponerEstado('Preparando FreeFEM JS…'); await crearMarco(); }
+    if (!ejecutando) return;
+    ponerEstado('Calculando… Puede detenerlo con ■ Detener o recargar con F5.');
+    marco.contentWindow.postMessage({ tipo: 'ejecutar', codigo: editor.value }, '*');
   } catch (e) {
+    destruirMarco(); modoBoton(false);
     ponerEstado(e.message, 'err');
-  } finally {
-    btnEjecutar.disabled = false;
+  }
+}
+
+function detenerEjecucion() {
+  destruirMarco();                    // el navegador termina el proceso del iframe
+  modoBoton(false);
+  ponerEstado('Ejecución detenida.', 'err');
+}
+
+function finalizar(err, seg) {
+  modoBoton(false);
+  const texto = salida.join('\n');
+  if (!texto) consola.textContent = '(sin salida)';
+  dibujarUltimo();
+  mostrarResultados(extraerTabla(texto));
+  if (/Cannot enlarge memory arrays/.test(texto)) {
+    destruirMarco();                  // el motor queda inutilizable tras agotar la memoria
+    ponerEstado('FreeFEM JS se quedó sin memoria' + (memoriaAmpliada ? '' : ' (16 MB)') +
+                ': reduzca nref o el orden del elemento.', 'err');
+  } else if (err || !/Normal End/.test(texto)) {
+    destruirMarco();
+    ponerEstado('FreeFEM terminó con errores: revise la consola.' + (err ? ' (' + err + ')' : ''), 'err');
+  } else {
+    ponerEstado('Ejecución completada en ' + seg.toFixed(2) + ' s.', 'ok');
   }
 }
 btnEjecutar.addEventListener('click', ejecutar);
 
-/* Filas con 6 números: h, ndof, errL2, tasaL2, errH1, tasaH1 */
+/* Filas: h, ndof, errL2, tasaL2, errH1, tasaH1, errTotal, tasaTotal ("--" en la primera tasa) */
 function extraerTabla(texto) {
   const filas = [];
+  const numero = v => v === '--' || /^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(v);
   for (const l of texto.split('\n')) {
     const p = l.trim().split(/\s+/);
-    if (p.length === 6 && p.every(v => /^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(v))) filas.push(p.map(Number));
+    if (p.length === 8 && p.every(numero)) filas.push(p.map(x => (x === '--' ? NaN : Number(x))));
   }
   return filas;
 }
@@ -1338,21 +1498,23 @@ function mostrarResultados(filas) {
   const cont = document.getElementById('resultados');
   if (!filas.length) { cont.innerHTML = '<div class="vacio">No se encontró la tabla de errores en la salida.</div>'; return; }
   let html = '<div class="tabla-wrap" style="margin:0"><table class="t num"><thead><tr>' +
-    '<th>h</th><th>ndof</th><th>error L²</th><th>tasa</th><th>error H¹</th><th>tasa</th></tr></thead><tbody>';
+    '<th>h</th><th>ndof</th><th>error L²</th><th>tasa</th><th>error H¹</th><th>tasa</th><th>error total</th><th>tasa</th></tr></thead><tbody>';
   filas.forEach((f, i) => {
     html += '<tr><td>' + fmt(f[0], 4) + '</td><td>' + f[1] + '</td><td>' + fmt(f[2], 4) + '</td><td>' +
-      (i ? f[3].toFixed(3) : '—') + '</td><td>' + fmt(f[4], 4) + '</td><td>' + (i ? f[5].toFixed(3) : '—') + '</td></tr>';
+      (i ? f[3].toFixed(3) : '—') + '</td><td>' + fmt(f[4], 4) + '</td><td>' + (i ? f[5].toFixed(3) : '—') +
+      '</td><td>' + fmt(f[6], 4) + '</td><td>' + (i ? f[7].toFixed(3) : '—') + '</td></tr>';
   });
   html += '</tbody></table></div><div>' + graficoLogLog(filas) +
     '<div class="leyenda"><span><i style="background:#1B3A57"></i>error L²</span>' +
     '<span><i style="background:#3D7AA8"></i>error H¹</span>' +
+    '<span><i style="background:repeating-linear-gradient(90deg,#50677D 0 6px,transparent 6px 9px)"></i>error total</span>' +
     '<span><i style="background:repeating-linear-gradient(90deg,#9aa4ae 0 4px,transparent 4px 7px)"></i>pendientes de referencia</span></div></div>';
   cont.innerHTML = html;
 }
 
 function graficoLogLog(filas) {
   const W = 520, H = 300, m = { l: 62, r: 16, t: 14, b: 40 };
-  const hs = filas.map(f => f[0]), es = filas.flatMap(f => [f[2], f[4]]).filter(v => v > 0);
+  const hs = filas.map(f => f[0]), es = filas.flatMap(f => [f[2], f[4], f[6]]).filter(v => v > 0);
   const lx0 = Math.floor(Math.log10(Math.min(...hs)) * 2) / 2, lx1 = Math.ceil(Math.log10(Math.max(...hs)) * 2) / 2;
   const ly0 = Math.floor(Math.log10(Math.min(...es))), ly1 = Math.ceil(Math.log10(Math.max(...es)));
   const X = v => m.l + (Math.log10(v) - lx0) / (lx1 - lx0) * (W - m.l - m.r);
@@ -1378,13 +1540,14 @@ function graficoLogLog(filas) {
            '<text x="' + (X(pri[0]) + 6) + '" y="' + (Y(y0) - 6) + '" font-size="11" font-family="Fira Sans" fill="#5E6A75">O(h' + (p === 1 ? '' : '<tspan dy="-5" font-size="8">' + p + '</tspan><tspan dy="5">') + ')' + (p === 1 ? '' : '</tspan>') + '</text>';
   };
   const pH1 = Math.max(1, Math.round(ult[5] || 1)), pL2 = Math.max(2, Math.round(ult[3] || 2));
-  s += ref(pL2, ult[2], 0.45) + ref(pH1, ult[4], 1.8);
-  const serie = (idx, color) => {
+  s += ref(pL2, ult[2], 0.45) + ref(pH1, ult[4], 2.6);
+  const serie = (idx, color, guiones) => {
     const pts = filas.map(f => X(f[0]).toFixed(1) + ',' + Y(f[idx]).toFixed(1)).join(' ');
-    return '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.2"/>' +
+    return '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.2"' +
+      (guiones ? ' stroke-dasharray="6 3"' : '') + '/>' +
       filas.map(f => '<circle cx="' + X(f[0]) + '" cy="' + Y(f[idx]) + '" r="3.6" fill="#fff" stroke="' + color + '" stroke-width="2"/>').join('');
   };
-  s += serie(4, '#3D7AA8') + serie(2, '#1B3A57') + '</svg>';
+  s += serie(6, '#50677D', true) + serie(4, '#3D7AA8') + serie(2, '#1B3A57') + '</svg>';
   return s;
 }
 
@@ -1407,6 +1570,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, { rootMargin: '-20% 0px -70% 0px' });
   enlaces.forEach(a => { const s = document.querySelector(a.getAttribute('href')); if (s) obs.observe(s); });
+  // Pantalla completa (útil para proyectar la página en clases)
+  const btnPantalla = document.getElementById('btn-pantalla');
+  const raiz = document.documentElement;
+  const pedirPantalla = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+  const salirPantalla = document.exitFullscreen || document.webkitExitFullscreen;
+  const enPantalla = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  if (!pedirPantalla) btnPantalla.hidden = true;     // p. ej., Safari en iPhone
+  btnPantalla.addEventListener('click', () => {
+    const p = enPantalla() ? salirPantalla.call(document) : pedirPantalla.call(raiz);
+    if (p && p.catch) p.catch(() => {});
+  });
+  const actualizarPantalla = () => {
+    const on = enPantalla();
+    raiz.classList.toggle('en-pantalla', on);
+    btnPantalla.setAttribute('aria-label', on ? 'Salir de pantalla completa' : 'Ver en pantalla completa');
+    btnPantalla.title = on ? 'Salir de pantalla completa' : 'Pantalla completa';
+  };
+  document.addEventListener('fullscreenchange', actualizarPantalla);
+  document.addEventListener('webkitfullscreenchange', actualizarPantalla);
   if (location.hash === '#autorun') ejecutar();
 });
 </script>
